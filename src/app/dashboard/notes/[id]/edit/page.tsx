@@ -34,7 +34,8 @@ export default function EditNotePage() {
                 const noteResponse = await getNoteById(noteId);
 
                 if (noteResponse.note) {
-                    // Transform the note data to match your Note interface
+                    const category = noteResponse.note.category;
+
                     const transformedNote: Note = {
                         id: noteResponse.note.id,
                         title: noteResponse.note.title || undefined,
@@ -43,16 +44,12 @@ export default function EditNotePage() {
                         created_at: noteResponse.note.created_at,
                         updated_at: noteResponse.note.updated_at,
                         category_id: noteResponse.note.category_id || undefined,
-                        // Extract category name from the category object
-                        category:
-                            typeof noteResponse.note.category === 'object'
-                                ? noteResponse.note.category.name
-                                : noteResponse.note.category,
-                        // Extract color from the category object
-                        color:
-                            typeof noteResponse.note.category === 'object'
-                                ? noteResponse.note.category.color
-                                : noteResponse.note.color,
+
+                        // Safe access to category properties
+                        category: typeof category === 'object' ? category?.name || undefined : category || undefined,
+
+                        color: typeof category === 'object' ? category?.color || undefined : undefined,
+
                         tags: noteResponse.note.tags || [],
                         is_public: noteResponse.note.is_public || undefined,
                         type: noteResponse.note.type || undefined,
@@ -63,10 +60,6 @@ export default function EditNotePage() {
                     };
 
                     setNote(transformedNote);
-                } else if (noteResponse.error) {
-                    throw new Error(noteResponse.error);
-                } else {
-                    throw new Error('Note not found');
                 }
 
                 // Fetch categories using server action

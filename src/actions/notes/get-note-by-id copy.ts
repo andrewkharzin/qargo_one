@@ -1,21 +1,8 @@
 'use server';
 
 import { createSupabaseServerClient } from '@/lib/supabase/server';
-import { Note, Category, NoteTag, NoteShare } from '@/types/notes'; // Adjust import path
 
-export async function getNoteById(noteId: string): Promise<{
-  note: (Note & {
-    category?: Category;
-    tags?: string[];
-    attachments?: any[];
-    comments?: any[];
-    tasks?: any[];
-    followers?: any[];
-    permissions?: any[];
-    shares?: NoteShare[];
-  }) | null;
-  error: string | null;
-}> {
+export async function getNoteById(noteId: string) {
   try {
     const supabase = await createSupabaseServerClient();
 
@@ -28,7 +15,7 @@ export async function getNoteById(noteId: string): Promise<{
       .from('notes')
       .select(`
         *,
-        note_categories:category_id (id, name, color, description)
+        note_categories:category_id (name, color, description)
       `)
       .eq('id', noteId)
       .eq('author_id', user.id)
@@ -53,11 +40,11 @@ export async function getNoteById(noteId: string): Promise<{
       { data: permissions },
       { data: shares }
     ] = await Promise.all([
-      // Tags - get full tag objects instead of just names
+      // Tags
       supabase
         .from('note_tag_map')
         .select(`
-          note_tags!inner(id, name, tag_embedding, synonyms, category_id, is_system_tag)
+          note_tags!inner(name)
         `)
         .eq('note_id', noteId),
 
@@ -67,7 +54,7 @@ export async function getNoteById(noteId: string): Promise<{
         .select('*')
         .eq('note_id', noteId),
 
-      // Comments
+      // Comments - get basic data first, then enrich with user info
       supabase
         .from('note_comments')
         .select('*')
@@ -92,10 +79,10 @@ export async function getNoteById(noteId: string): Promise<{
         .select('*')
         .eq('note_id', noteId),
 
-      // Shares - using NoteShare interface
+      // Shares
       supabase
         .from('note_shares')
-        .select('id, note_id, shared_with, can_edit, created_at')
+        .select('*')
         .eq('note_id', noteId)
     ]);
 
@@ -115,7 +102,7 @@ export async function getNoteById(noteId: string): Promise<{
       })
     );
 
-    // Enrich tasks with assignee data
+    // Enrich other user-related data similarly if needed
     const enrichedTasks = await Promise.all(
       (tasks || []).map(async (task) => {
         if (!task.assignee) return task;
@@ -133,65 +120,19 @@ export async function getNoteById(noteId: string): Promise<{
       })
     );
 
-    // Extract tag names for the Note interface
-    // Extract tag names for the Note interface
-    const tags = (tagsData as any)
-    ?.map((t: any) => t.note_tags?.name)
-    .filter((name: string | undefined): name is string => Boolean(name)) || [];
+    const tags = tagsData?.map(t => t.note_tags?.name).filter(Boolean) || [];
 
-    // Get full tag objects if needed
-    const noteTags: NoteTag[] = (tagsData as any)
-    ?.map((t: any) => {
-        const tag = t.note_tags;
-        return tag ? {
-        id: tag.id,
-        name: tag.name,
-        tag_embedding: tag.tag_embedding,
-        synonyms: tag.synonyms,
-        category_id: tag.category_id,
-        is_system_tag: tag.is_system_tag
-        } satisfies NoteTag : null;
-    })
-    .filter((tag: NoteTag | null): tag is NoteTag => Boolean(tag)) || [];
-
-    // Transform category data
-    const categoryData = note.note_categories as unknown as Category;
-
-    // Transform data according to interfaces
-    const noteWithDetails: Note & {
-      category?: Category;
-      tags?: string[];
-      attachments?: any[];
-      comments?: any[];
-      tasks?: any[];
-      followers?: any[];
-      permissions?: any[];
-      shares?: NoteShare[];
-    } = {
-      id: note.id,
-      title: note.title,
-      content: note.content,
-      is_pinned: note.is_pinned,
-      created_at: note.created_at,
-      updated_at: note.updated_at,
-      category_id: note.category_id,
-      color: note.color,
-      is_public: note.is_public,
-      type: note.type,
-      priority: note.priority,
-      urgency: note.urgency,
-      is_archived: note.is_archived,
-      word_count: note.word_count,
-
-      // Additional relationships
-      category: categoryData,
+    // Transform data
+    const noteWithDetails = {
+      ...note,
+      category: note.note_categories,
       tags,
       attachments: attachments || [],
       comments: enrichedComments || [],
       tasks: enrichedTasks || [],
       followers: followers || [],
       permissions: permissions || [],
-      shares: (shares as NoteShare[]) || []
+      shares: shares || []
     };
 
     return { note: noteWithDetails, error: null };
