@@ -45,7 +45,7 @@ export default function LoginPage(): JSX.Element {
   useEffect(() => {
     if (loginSuccess) {
       const timer1 = setTimeout(() => setShowSuccess(true), 500)
-      const timer2 = setTimeout(() => router.push('/dashboard'), 5000)
+      const timer2 = setTimeout(() => router.push('/dashboard/notes'), 5000)
       return () => {
         clearTimeout(timer1)
         clearTimeout(timer2)

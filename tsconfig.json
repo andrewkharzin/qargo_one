@@ -21,10 +21,12 @@
                 "name": "next"
             }
         ],
-        "paths": {
-            "@/*": [
-                "./src/*"
-            ]
+        "baseUrl": "src",
+         "paths": {
+            "@/*": ["./*"],
+            "@/actions/*": ["./actions/*"],
+            "@/layouts/*": ["./layouts/*"],
+            "@/types/*": ["./types/*"]
         },
         "target": "ES2023"
     },
