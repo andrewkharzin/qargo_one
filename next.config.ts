@@ -13,7 +13,7 @@ const nextConfig: NextConfig = {
     // Разрешаем Server Actions для всех origin в development
     experimental: {
         serverActions: {
-            allowedOrigins: ['localhost:3002', '*.app.github.dev', '*.github.dev'],
+            allowedOrigins: ['localhost:3000', '*.app.github.dev', '*.github.dev'],
         },
     },
     // Отключаем strict mode для Server Actions
