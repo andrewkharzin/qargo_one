@@ -27,46 +27,49 @@ export default function CreateNoteClient({ categories }: CreateNoteClientProps) 
         setDebugInfo((prev) => [...prev, `${new Date().toISOString()}: ${message}`]);
     };
 
-    const handleSave = async (noteData: { title: string; content: string; category: string }) => {
-        alert('Save function called! Check console.'); // ← This should always show
-        console.log('🔄 Save function called with:', noteData);
-        addDebug('🔄 Starting save with data: ' + JSON.stringify(noteData));
-        setIsSaving(true);
+   // In CreateNoteClient.tsx - Update the handleSave function
+    const handleSave = async (noteData: { title: string; content: string; category: string; color: string; }) => {
+    alert('Save function called! Check console.');
+    console.log('🔄 Save function called with:', noteData);
+    addDebug('🔄 Starting save with data: ' + JSON.stringify(noteData));
+    setIsSaving(true);
 
-        try {
-            addDebug('📤 Calling createNote server action...');
-            const result = await createNote({
-                title: noteData.title,
-                content: noteData.content,
-                category_id: noteData.category || undefined,
-                is_public: false,
-                type: 'note',
-                priority: 3,
-                urgency: 3
-            });
+    try {
+        addDebug('📤 Calling createNote server action...');
+        const result = await createNote({
+        title: noteData.title,
+        content: noteData.content,
+        category_id: noteData.category || undefined,
+        color: noteData.color,
+        is_public: false,
+        type: 'note',
+        priority: 3,
+        urgency: 3
+        });
 
-            addDebug('📥 Server action response: ' + JSON.stringify(result));
+        addDebug('📥 Server action response: ' + JSON.stringify(result));
 
-            if (result.error) {
-                addDebug('❌ Server error: ' + result.error);
-                throw new Error(result.error);
-            }
-
-            if (result.note) {
-                addDebug('✅ Note created successfully, redirecting...');
-                router.push('/dashboard/notes');
-                router.refresh();
-            } else {
-                addDebug('❌ No note returned from server');
-                throw new Error('Failed to create note');
-            }
-        } catch (error) {
-            addDebug('❌ Error in handleSave: ' + error);
-            alert(error instanceof Error ? error.message : 'Failed to create note. Please try again.');
-        } finally {
-            addDebug('🏁 Save process completed');
-            setIsSaving(false);
+        if (result.error) {
+        addDebug('❌ Server error: ' + result.error);
+        throw new Error(result.error);
         }
+
+        if (result.note) {
+        addDebug('✅ Note created successfully, redirecting...');
+        // CHANGE THIS LINE - Add the newNote parameter
+        router.push(`/dashboard/notes?newNote=${result.note.id}`);
+        router.refresh();
+        } else {
+        addDebug('❌ No note returned from server');
+        throw new Error('Failed to create note');
+        }
+    } catch (error) {
+        addDebug('❌ Error in handleSave: ' + error);
+        alert(error instanceof Error ? error.message : 'Failed to create note. Please try again.');
+    } finally {
+        addDebug('🏁 Save process completed');
+        setIsSaving(false);
+    }
     };
 
     const handleCancel = () => {

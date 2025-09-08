@@ -1,4 +1,3 @@
-// actions/notes.ts
 'use server'
 
 import { createSupabaseServerClient } from '@/lib/supabase/server'
@@ -8,6 +7,7 @@ export async function createNote(noteData: {
   title: string;
   content: string;
   category_id?: string;
+  color?: string; // Добавлено свойство color
   is_public?: boolean;
   type?: string;
   subcategory?: string;
@@ -31,7 +31,8 @@ export async function createNote(noteData: {
       .from('notes')
       .insert({
         ...noteData,
-        author_id: user.id
+        author_id: user.id,
+        color: noteData.color || 'slate' // Значение по умолчанию
       })
       .select()
       .single()

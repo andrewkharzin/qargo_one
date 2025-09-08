@@ -85,7 +85,7 @@ interface TemplateField {
 interface NoteEditorProps {
     note?: Note;
     categories: Category[];
-    onSave: (note: { title: string; content: string; category: string }) => void;
+    onSave: (note: { title: string; content: string; category: string; color: string }) => void;
     onCancel: () => void;
     isSaving?: boolean;
 }
@@ -93,7 +93,9 @@ interface NoteEditorProps {
 interface ColorOption {
     value: string;
     label: string;
-    class: string;
+    bgClass: string;
+    textClass: string;
+    borderClass: string;
 }
 
 interface DocumentTypeOption {
@@ -101,57 +103,326 @@ interface DocumentTypeOption {
     label: string;
     icon: LucideIcon;
     category: string;
+    description: string;
 }
 
 const colorOptions: ColorOption[] = [
-    { value: 'blue', label: 'Blue', class: 'bg-blue-500' },
-    { value: 'purple', label: 'Purple', class: 'bg-purple-500' },
-    { value: 'green', label: 'Green', class: 'bg-green-500' },
-    { value: 'yellow', label: 'Yellow', class: 'bg-yellow-500' },
-    { value: 'pink', label: 'Pink', class: 'bg-pink-500' },
-    { value: 'gray', label: 'Gray', class: 'bg-gray-500' }
+    {
+        value: 'slate',
+        label: 'Slate',
+        bgClass: 'bg-slate-100',
+        textClass: 'text-slate-800',
+        borderClass: 'border-slate-300'
+    },
+    {
+        value: 'gray',
+        label: 'Gray',
+        bgClass: 'bg-gray-100',
+        textClass: 'text-gray-800',
+        borderClass: 'border-gray-300'
+    },
+    {
+        value: 'zinc',
+        label: 'Zinc',
+        bgClass: 'bg-zinc-100',
+        textClass: 'text-zinc-800',
+        borderClass: 'border-zinc-300'
+    },
+    {
+        value: 'neutral',
+        label: 'Neutral',
+        bgClass: 'bg-neutral-100',
+        textClass: 'text-neutral-800',
+        borderClass: 'border-neutral-300'
+    },
+    {
+        value: 'stone',
+        label: 'Stone',
+        bgClass: 'bg-stone-100',
+        textClass: 'text-stone-800',
+        borderClass: 'border-stone-300'
+    },
+    { value: 'red', label: 'Red', bgClass: 'bg-red-100', textClass: 'text-red-800', borderClass: 'border-red-300' },
+    {
+        value: 'orange',
+        label: 'Orange',
+        bgClass: 'bg-orange-100',
+        textClass: 'text-orange-800',
+        borderClass: 'border-orange-300'
+    },
+    {
+        value: 'amber',
+        label: 'Amber',
+        bgClass: 'bg-amber-100',
+        textClass: 'text-amber-800',
+        borderClass: 'border-amber-300'
+    },
+    {
+        value: 'yellow',
+        label: 'Yellow',
+        bgClass: 'bg-yellow-100',
+        textClass: 'text-yellow-800',
+        borderClass: 'border-yellow-300'
+    },
+    { value: 'lime', label: 'Lime', bgClass: 'bg-lime-100', textClass: 'text-lime-800', borderClass: 'border-lime-300' }
 ];
 
-// Updated constant with comprehensive types
+// Updated constant with comprehensive types and descriptions
 const documentTypeOptions: DocumentTypeOption[] = [
-    { value: 'note', label: 'Note', icon: FileText, category: 'General' },
-    { value: 'quick_note', label: 'Quick Note', icon: FileText, category: 'General' },
-    { value: 'bookmark', label: 'Bookmark', icon: FileText, category: 'General' },
-    { value: 'procedure', label: 'Procedure', icon: CheckSquare, category: 'Process' },
-    { value: 'checklist', label: 'Checklist', icon: ListTodo, category: 'Process' },
-    { value: 'template', label: 'Template', icon: LayoutIcon, category: 'Process' },
-    { value: 'sop', label: 'SOP', icon: Settings, category: 'Process' },
-    { value: 'workflow', label: 'Workflow', icon: Workflow, category: 'Process' },
-    { value: 'problem', label: 'Problem', icon: AlertTriangle, category: 'Issues' },
-    { value: 'incident', label: 'Incident', icon: Bug, category: 'Issues' },
-    { value: 'solution', label: 'Solution', icon: Lightbulb, category: 'Issues' },
-    { value: 'workaround', label: 'Workaround', icon: Settings, category: 'Issues' },
-    { value: 'risk', label: 'Risk', icon: Shield, category: 'Issues' },
-    { value: 'client_request', label: 'Client Request', icon: Users, category: 'Client' },
-    { value: 'client_feedback', label: 'Client Feedback', icon: MessageSquare, category: 'Client' },
-    { value: 'complaint', label: 'Complaint', icon: ThumbsDown, category: 'Client' },
-    { value: 'approval', label: 'Approval', icon: CheckCircle, category: 'Client' },
-    { value: 'email', label: 'Email', icon: Mail, category: 'Communication' },
-    { value: 'message', label: 'Message', icon: MessageSquare, category: 'Communication' },
-    { value: 'meeting_notes', label: 'Meeting Notes', icon: Calendar, category: 'Communication' },
-    { value: 'call_summary', label: 'Call Summary', icon: Phone, category: 'Communication' },
-    { value: 'knowledge_base', label: 'Knowledge Base', icon: BookOpen, category: 'Knowledge' },
-    { value: 'training', label: 'Training', icon: GraduationCap, category: 'Knowledge' },
-    { value: 'best_practice', label: 'Best Practice', icon: Award, category: 'Knowledge' },
-    { value: 'lesson_learned', label: 'Lesson Learned', icon: Lightbulb, category: 'Knowledge' },
-    { value: 'reminder', label: 'Reminder', icon: Clock, category: 'System' },
-    { value: 'alert', label: 'Alert', icon: Bell, category: 'System' },
-    { value: 'auto_generated', label: 'Auto Generated', icon: Database, category: 'System' },
-    { value: 'system_log', label: 'System Log', icon: FileText, category: 'System' },
-    { value: 'booking_notes', label: 'Booking Notes', icon: Calendar, category: 'Travel' },
-    { value: 'flight_notes', label: 'Flight Notes', icon: Plane, category: 'Travel' },
-    { value: 'airline_notes', label: 'Airline Notes', icon: Plane, category: 'Travel' },
-    { value: 'airport_notes', label: 'Airport Notes', icon: Building, category: 'Travel' },
-    { value: 'emergency', label: 'Emergency', icon: Siren, category: 'Critical' },
-    { value: 'legal', label: 'Legal', icon: Scale, category: 'Critical' },
-    { value: 'compliance', label: 'Compliance', icon: FileCheck, category: 'Critical' },
-    { value: 'audit', label: 'Audit', icon: Search, category: 'Critical' },
-    { value: 'task', label: 'Task', icon: CheckSquare, category: 'Critical' }
+    {
+        value: 'note',
+        label: 'Note',
+        icon: FileText,
+        category: 'General',
+        description: 'General purpose note for any information'
+    },
+    {
+        value: 'quick_note',
+        label: 'Quick Note',
+        icon: FileText,
+        category: 'General',
+        description: 'Brief note for quick capture'
+    },
+    {
+        value: 'bookmark',
+        label: 'Bookmark',
+        icon: FileText,
+        category: 'General',
+        description: 'Save and organize important links'
+    },
+    {
+        value: 'procedure',
+        label: 'Procedure',
+        icon: CheckSquare,
+        category: 'Process',
+        description: 'Step-by-step instructions for a process'
+    },
+    {
+        value: 'checklist',
+        label: 'Checklist',
+        icon: ListTodo,
+        category: 'Process',
+        description: 'Task list with completion tracking'
+    },
+    {
+        value: 'template',
+        label: 'Template',
+        icon: LayoutIcon,
+        category: 'Process',
+        description: 'Reusable document structure'
+    },
+    {
+        value: 'sop',
+        label: 'SOP',
+        icon: Settings,
+        category: 'Process',
+        description: 'Standard Operating Procedure document'
+    },
+    {
+        value: 'workflow',
+        label: 'Workflow',
+        icon: Workflow,
+        category: 'Process',
+        description: 'Process flow with multiple steps'
+    },
+    {
+        value: 'problem',
+        label: 'Problem',
+        icon: AlertTriangle,
+        category: 'Issues',
+        description: 'Documentation of an identified issue'
+    },
+    {
+        value: 'incident',
+        label: 'Incident',
+        icon: Bug,
+        category: 'Issues',
+        description: 'Record of an unexpected event or outage'
+    },
+    {
+        value: 'solution',
+        label: 'Solution',
+        icon: Lightbulb,
+        category: 'Issues',
+        description: 'Resolution to a problem or issue'
+    },
+    {
+        value: 'workaround',
+        label: 'Workaround',
+        icon: Settings,
+        category: 'Issues',
+        description: 'Temporary fix for an ongoing problem'
+    },
+    { value: 'risk', label: 'Risk', icon: Shield, category: 'Issues', description: 'Potential issue that might occur' },
+    {
+        value: 'client_request',
+        label: 'Client Request',
+        icon: Users,
+        category: 'Client',
+        description: 'Formal request from a client'
+    },
+    {
+        value: 'client_feedback',
+        label: 'Client Feedback',
+        icon: MessageSquare,
+        category: 'Client',
+        description: 'Feedback received from clients'
+    },
+    {
+        value: 'complaint',
+        label: 'Complaint',
+        icon: ThumbsDown,
+        category: 'Client',
+        description: 'Formal complaint from a client'
+    },
+    {
+        value: 'approval',
+        label: 'Approval',
+        icon: CheckCircle,
+        category: 'Client',
+        description: 'Document requiring client approval'
+    },
+    {
+        value: 'email',
+        label: 'Email',
+        icon: Mail,
+        category: 'Communication',
+        description: 'Record of important email correspondence'
+    },
+    {
+        value: 'message',
+        label: 'Message',
+        icon: MessageSquare,
+        category: 'Communication',
+        description: 'Important chat or message record'
+    },
+    {
+        value: 'meeting_notes',
+        label: 'Meeting Notes',
+        icon: Calendar,
+        category: 'Communication',
+        description: 'Notes from meetings or discussions'
+    },
+    {
+        value: 'call_summary',
+        label: 'Call Summary',
+        icon: Phone,
+        category: 'Communication',
+        description: 'Summary of important phone calls'
+    },
+    {
+        value: 'knowledge_base',
+        label: 'Knowledge Base',
+        icon: BookOpen,
+        category: 'Knowledge',
+        description: 'Information for reference and training'
+    },
+    {
+        value: 'training',
+        label: 'Training',
+        icon: GraduationCap,
+        category: 'Knowledge',
+        description: 'Training materials and guides'
+    },
+    {
+        value: 'best_practice',
+        label: 'Best Practice',
+        icon: Award,
+        category: 'Knowledge',
+        description: 'Recommended approaches and methods'
+    },
+    {
+        value: 'lesson_learned',
+        label: 'Lesson Learned',
+        icon: Lightbulb,
+        category: 'Knowledge',
+        description: 'Insights gained from experience'
+    },
+    {
+        value: 'reminder',
+        label: 'Reminder',
+        icon: Clock,
+        category: 'System',
+        description: 'Note to remember important tasks or events'
+    },
+    {
+        value: 'alert',
+        label: 'Alert',
+        icon: Bell,
+        category: 'System',
+        description: 'Important notification or warning'
+    },
+    {
+        value: 'auto_generated',
+        label: 'Auto Generated',
+        icon: Database,
+        category: 'System',
+        description: 'Automatically created note or report'
+    },
+    {
+        value: 'system_log',
+        label: 'System Log',
+        icon: FileText,
+        category: 'System',
+        description: 'Record of system events or changes'
+    },
+    {
+        value: 'booking_notes',
+        label: 'Booking Notes',
+        icon: Calendar,
+        category: 'Travel',
+        description: 'Details about travel bookings'
+    },
+    {
+        value: 'flight_notes',
+        label: 'Flight Notes',
+        icon: Plane,
+        category: 'Travel',
+        description: 'Information about flights'
+    },
+    {
+        value: 'airline_notes',
+        label: 'Airline Notes',
+        icon: Plane,
+        category: 'Travel',
+        description: 'Notes about airlines and services'
+    },
+    {
+        value: 'airport_notes',
+        label: 'Airport Notes',
+        icon: Building,
+        category: 'Travel',
+        description: 'Information about airports'
+    },
+    {
+        value: 'emergency',
+        label: 'Emergency',
+        icon: Siren,
+        category: 'Critical',
+        description: 'Emergency procedures and contacts'
+    },
+    {
+        value: 'legal',
+        label: 'Legal',
+        icon: Scale,
+        category: 'Critical',
+        description: 'Legal documents and requirements'
+    },
+    {
+        value: 'compliance',
+        label: 'Compliance',
+        icon: FileCheck,
+        category: 'Critical',
+        description: 'Compliance-related documentation'
+    },
+    { value: 'audit', label: 'Audit', icon: Search, category: 'Critical', description: 'Audit records and findings' },
+    {
+        value: 'task',
+        label: 'Task',
+        icon: CheckSquare,
+        category: 'Critical',
+        description: 'Individual task or assignment'
+    }
 ];
 
 // Helper to group document types by category for the Select component
@@ -168,7 +439,7 @@ export default function NoteEditor({ note, categories, onSave, onCancel, isSavin
         title: '',
         content: '',
         category_id: '',
-        color: 'blue',
+        color: 'slate',
         tags: [] as string[],
         is_pinned: false,
         is_public: false,
@@ -178,6 +449,12 @@ export default function NoteEditor({ note, categories, onSave, onCancel, isSavin
     });
     const [newTag, setNewTag] = useState('');
     const [debugLogs, setDebugLogs] = useState<string[]>([]);
+
+    // Get the selected color class
+    const selectedColor = colorOptions.find((option) => option.value === formData.color) || colorOptions[0];
+
+    // Apply color to the editor container
+    const editorContainerClass = `overflow-hidden rounded-2xl border ${selectedColor.borderClass} ${selectedColor.bgClass} shadow-xl backdrop-blur-sm`;
 
     // Debug logging function
     const addDebugLog = (message: string) => {
@@ -195,7 +472,7 @@ export default function NoteEditor({ note, categories, onSave, onCancel, isSavin
                 title: note.title || '',
                 content: note.content || '',
                 category_id: note.category_id || '',
-                color: note.color || 'blue',
+                color: note.color || 'slate',
                 tags: note.tags || [],
                 is_pinned: note.is_pinned || false,
                 is_public: note.is_public || false,
@@ -259,7 +536,8 @@ export default function NoteEditor({ note, categories, onSave, onCancel, isSavin
             await onSave({
                 title: formData.title,
                 content: formData.content,
-                category: formData.category_id
+                category: formData.category_id,
+                color: formData.color // Add this
             });
             addDebugLog('✅ onSave completed successfully');
         } catch (error) {
@@ -334,12 +612,13 @@ export default function NoteEditor({ note, categories, onSave, onCancel, isSavin
                 </div>
 
                 {/* Editor Form */}
+                {/* Editor Form */}
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className='overflow-hidden rounded-2xl border border-slate-200/60 bg-white/80 shadow-xl backdrop-blur-sm'>
-                    {/* Title and Meta */}
-                    <div className='border-b border-slate-200/60 bg-white/50 p-6'>
+                    className={`overflow-hidden rounded-2xl border ${selectedColor.borderClass} ${selectedColor.bgClass} shadow-xl backdrop-blur-sm`}>
+                    {/* Title and Meta Section with applied color */}
+                    <div className={`border-b ${selectedColor.borderClass} p-6`}>
                         <div className='mb-4 grid gap-4 lg:grid-cols-2'>
                             <div>
                                 <label className='mb-2 block text-sm font-medium text-slate-700'>Note Title *</label>
@@ -373,9 +652,14 @@ export default function NoteEditor({ note, categories, onSave, onCancel, isSavin
                                                 </div>
                                                 {types.map((type) => (
                                                     <SelectItem key={type.value} value={type.value}>
-                                                        <div className='flex items-center gap-2'>
-                                                            <type.icon className='h-4 w-4' />
-                                                            {type.label}
+                                                        <div className='flex flex-col'>
+                                                            <div className='flex items-center gap-2'>
+                                                                <type.icon className='h-4 w-4' />
+                                                                <span className='font-medium'>{type.label}</span>
+                                                            </div>
+                                                            <div className='mt-1 ml-6 text-xs text-slate-500'>
+                                                                {type.description}
+                                                            </div>
                                                         </div>
                                                     </SelectItem>
                                                 ))}
@@ -402,6 +686,31 @@ export default function NoteEditor({ note, categories, onSave, onCancel, isSavin
                                         {categories.map((category) => (
                                             <SelectItem key={category.id} value={category.id}>
                                                 {category.name}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            <div>
+                                <label className='mb-2 block text-sm font-medium text-slate-700'>Color Theme</label>
+                                <Select
+                                    value={formData.color}
+                                    onValueChange={(value) => {
+                                        addDebugLog(`Color changed to: ${value}`);
+                                        setFormData((prev) => ({ ...prev, color: value }));
+                                    }}>
+                                    <SelectTrigger className='border-slate-200 focus:border-blue-500 focus:ring-blue-500'>
+                                        <SelectValue placeholder='Select color theme...' />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {colorOptions.map((color) => (
+                                            <SelectItem key={color.value} value={color.value}>
+                                                <div className='flex items-center gap-2'>
+                                                    <div
+                                                        className={`h-4 w-4 rounded-full ${color.bgClass} ${color.borderClass} border`}></div>
+                                                    {color.label}
+                                                </div>
                                             </SelectItem>
                                         ))}
                                     </SelectContent>
@@ -449,34 +758,6 @@ export default function NoteEditor({ note, categories, onSave, onCancel, isSavin
                                     </SelectContent>
                                 </Select>
                             </div>
-
-                            <div>
-                                <label className='mb-2 block text-sm font-medium text-slate-700'>Visibility</label>
-                                <Select
-                                    value={formData.is_public ? 'public' : 'private'}
-                                    onValueChange={(value) => {
-                                        addDebugLog(`Visibility changed to: ${value}`);
-                                        setFormData((prev) => ({ ...prev, is_public: value === 'public' }));
-                                    }}>
-                                    <SelectTrigger className='border-slate-200 focus:border-blue-500 focus:ring-blue-500'>
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value='private'>
-                                            <div className='flex items-center gap-2'>
-                                                <EyeOff className='h-4 w-4' />
-                                                Private
-                                            </div>
-                                        </SelectItem>
-                                        <SelectItem value='public'>
-                                            <div className='flex items-center gap-2'>
-                                                <Eye className='h-4 w-4' />
-                                                Public
-                                            </div>
-                                        </SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
                         </div>
 
                         <div className='mt-4 flex items-center gap-4'>
@@ -511,8 +792,8 @@ export default function NoteEditor({ note, categories, onSave, onCancel, isSavin
                         </div>
                     </div>
 
-                    {/* Tags Section */}
-                    <div className='border-t border-slate-200/60 bg-white/30 p-6'>
+                    {/* Tags Section with applied color */}
+                    <div className={`border-t ${selectedColor.borderClass} p-6`}>
                         <label className='mb-3 block text-sm font-medium text-slate-700'>Tags</label>
 
                         <div className='mb-3 flex gap-2'>

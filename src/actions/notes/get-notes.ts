@@ -15,7 +15,7 @@ export async function getNotes() {
       .from('notes')
       .select(`
         *,
-        note_categories:category_id (name, color)
+        note_categories:category_id (name)
       `)
       .eq('author_id', user.id)
       .order('is_pinned', { ascending: false })
@@ -27,7 +27,7 @@ export async function getNotes() {
     const notesWithDetails = notes.map(note => ({
       ...note,
       category: note.note_categories?.name, // Просто имя категории как строка
-      color: note.note_categories?.color,
+      // Цвет теперь берется из самой заметки, а не из категории
       // Вычисляемое поле для UI
       word_count: note.content.split(/\s+/).length
     }))
