@@ -176,7 +176,7 @@ export default function NotesPage() {
     };
 
     return (
-        <div className='min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20'>
+        <div className='min-h-screen bg-slate-50'>
             <div className='mx-auto max-w-7xl p-4 lg:p-8'>
                 {/* Header */}
                 <div className='mb-8 flex flex-col items-start justify-between gap-4 lg:flex-row lg:items-center'>
