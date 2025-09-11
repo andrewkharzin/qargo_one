@@ -18,6 +18,7 @@ import { Category, Note } from '@/types/notes';
 
 import { AnimatePresence, motion } from 'framer-motion';
 import { Edit3, Plus } from 'lucide-react';
+import NoteDetails from '@/components/notes/NoteDetails';
 
 export default function NotesPage() {
     const router = useRouter();
@@ -34,6 +35,22 @@ export default function NotesPage() {
 
     // Add this state to track new note IDs
     const [newNoteIds, setNewNoteIds] = useState<string[]>([]);
+
+     // Add these states for the sheet
+  const [selectedNote, setSelectedNote] = useState<Note | null>(null);
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
+
+  // Check URL for note ID to open sheet
+  useEffect(() => {
+    const noteId = searchParams.get('id');
+    if (noteId && notes.length > 0) {
+      const note = notes.find(n => n.id === noteId);
+      if (note) {
+        setSelectedNote(note);
+        setIsSheetOpen(true);
+      }
+    }
+  }, [searchParams, notes]);
 
     useEffect(() => {
         loadData();
@@ -75,11 +92,23 @@ export default function NotesPage() {
             if (notesResponse.error) throw new Error(notesResponse.error);
             if (categoriesResponse.error) throw new Error(categoriesResponse.error);
 
-            const processedNotes = (notesResponse.notes || []).map((note) => ({
+            // const processedNotes = (notesResponse.notes || []).map((note) => ({
+            //     ...note,
+            //     category: typeof note.category === 'object' ? note.category.name : note.category,
+            //     color: note.color || 'slate'
+            // }));
+            const processedNotes = (notesResponse.notes || []).map((note) => {
+            // Extract category name if it's an object, otherwise use as is
+            const categoryName = typeof note.category === 'object' && note.category !== null
+                ? (note.category as Category).name
+                : (note.category as string | undefined);
+
+            return {
                 ...note,
-                category: typeof note.category === 'object' ? note.category.name : note.category,
+                category: categoryName, // This ensures category is always string | undefined
                 color: note.color || 'slate'
-            }));
+            };
+            });
 
             setNotes(processedNotes);
             setCategories(categoriesResponse.categories || []);
@@ -132,32 +161,33 @@ export default function NotesPage() {
         router.push('/dashboard/notes/create');
     };
 
-    // If you have a separate note creation page, you'll need to update that too
-    // Here's what the create function should look like on your note creation page:
-    /*
-    const handleCreateNoteSubmit = async (noteData) => {
-        try {
-            const { success, error, note } = await createNote(noteData);
-
-            if (error) throw new Error(error);
-
-            // Redirect to notes list with the new note ID as a parameter
-            router.push(`/dashboard/notes?newNote=${note.id}`);
-        } catch (error) {
-            console.error('Error creating note:', error);
-        }
-    };
-    */
-
-    const handleEditNote = (note: Note) => {
-        router.push(`/dashboard/notes/${note.id}/edit`);
-    };
-
     const handlePinNote = async (noteId: string, isPinned: boolean) => {
         try {
-            const { success, error } = await pinNote(noteId, !isPinned);
-            if (error) throw new Error(error);
-            loadData();
+            // Optimistically update the UI
+            setNotes(prevNotes =>
+                prevNotes.map(note =>
+                    note.id === noteId
+                        ? { ...note, is_pinned: isPinned }
+                        : note
+                )
+            );
+
+            // Call the server action
+            const { success, error } = await pinNote(noteId, isPinned);
+
+            if (error) {
+                // Revert on error
+                setNotes(prevNotes =>
+                    prevNotes.map(note =>
+                        note.id === noteId
+                            ? { ...note, is_pinned: !isPinned }
+                            : note
+                    )
+                );
+                throw new Error(error);
+            }
+
+            // No need to call loadData() - we've already updated optimistically
         } catch (error) {
             console.error('Error pinning note:', error);
         }
@@ -168,11 +198,33 @@ export default function NotesPage() {
             try {
                 const { success, error } = await deleteNote(noteId);
                 if (error) throw new Error(error);
-                loadData();
+
+                // Update local state instead of reloading
+                setNotes(prevNotes => prevNotes.filter(note => note.id !== noteId));
             } catch (error) {
                 console.error('Error deleting note:', error);
             }
         }
+    };
+
+    const handleCardClick = (note: Note) => {
+        setSelectedNote(note);
+        setIsSheetOpen(true);
+        // Update URL without navigation
+        router.push(`/dashboard/notes?id=${note.id}`, { scroll: false });
+    };
+
+    const handleSheetOpenChange = (open: boolean) => {
+        setIsSheetOpen(open);
+        if (!open) {
+        // Clear the URL parameter when sheet closes
+        router.push('/dashboard/notes', { scroll: false });
+        }
+    };
+
+    const handleEditNote = (note: Note) => {
+        setIsSheetOpen(false);
+        router.push(`/dashboard/notes/${note.id}/edit`);
     };
 
     return (
@@ -181,7 +233,7 @@ export default function NotesPage() {
                 {/* Header */}
                 <div className='mb-8 flex flex-col items-start justify-between gap-4 lg:flex-row lg:items-center'>
                     <div>
-                        <h1 className='mb-2 text-3xl font-bold text-slate-900 lg:text-4xl'>Your Notes</h1>
+                        <h1 className='mb-2 text-3xl font-bold text-slate-500 lg:text-4xl'>Your Notes</h1>
                         <p className='text-slate-600'>Capture your thoughts with AI-powered organization</p>
                     </div>
                     <Button
@@ -269,11 +321,22 @@ export default function NotesPage() {
                                     onPin={handlePinNote}
                                     onDelete={handleDeleteNote}
                                     isNew={newNoteIds.includes(note.id)} // Pass the isNew prop
+                                    isSelected={selectedNote?.id === note.id} // Highlight selected note
+                                    onClick={() => handleCardClick(note)} // Add onClick handler
                                 />
                             ))}
                         </div>
                     )}
                 </AnimatePresence>
+                 {/* Add NoteDetails component */}
+                    <NoteDetails
+                    note={selectedNote}
+                    open={isSheetOpen}
+                    onOpenChange={handleSheetOpenChange}
+                    onEdit={handleEditNote}
+                    onPin={handlePinNote}
+                    onDelete={handleDeleteNote}
+                    />
             </div>
         </div>
     );

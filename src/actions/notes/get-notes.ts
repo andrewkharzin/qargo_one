@@ -15,7 +15,8 @@ export async function getNotes() {
       .from('notes')
       .select(`
         *,
-        note_categories:category_id (name)
+        note_categories:category_id (name),
+        note_reactions:note_reactions (*)
       `)
       .eq('author_id', user.id)
       .order('is_pinned', { ascending: false })
@@ -29,7 +30,8 @@ export async function getNotes() {
       category: note.note_categories?.name, // Просто имя категории как строка
       // Цвет теперь берется из самой заметки, а не из категории
       // Вычисляемое поле для UI
-      word_count: note.content.split(/\s+/).length
+      word_count: note.content.split(/\s+/).length,
+      reactions: note.note_reactions || [], // Добавляем реакции
     }))
 
     return { notes: notesWithDetails, error: null }

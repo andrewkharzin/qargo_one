@@ -6,7 +6,7 @@ export interface Note {
   created_at: string;
   updated_at: string;
   category_id?: string;
-  category?: string | Category; // Fix: Allow both types
+  category?: string | Category; // ✅ can be string OR Category
   color?: string;
   tags?: string[];
   is_public?: boolean;
@@ -15,6 +15,7 @@ export interface Note {
   urgency?: number;
   is_archived?: boolean;
   word_count?: number;
+  reactions?: Reaction[];
 }
 
 export interface Category {
@@ -58,4 +59,19 @@ export interface NoteWithTags extends Note {
 
 export interface NoteWithShares extends Note {
   shares?: NoteShare[];
+}
+
+export interface UserProfile {
+  id: string;
+  username?: string | null;
+  full_name?: string | null;
+  avatar_url?: string | null;
+}
+export interface Reaction {
+  id: string;
+  note_id: string;
+  user_id: string;
+  reaction_type: string;
+  created_at: string;
+  user_profile?: UserProfile | null;
 }

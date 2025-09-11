@@ -1,8 +1,9 @@
+// components/layouts/Sidebar/Sidebar.tsx
 'use client';
 
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { PenTool, Sparkles } from 'lucide-react'; 
+import { PenTool, Sparkles } from 'lucide-react';
 import {
   Sidebar as UISidebar,
   SidebarContent,
@@ -25,6 +26,14 @@ interface SidebarComponentProps {
 export default function Sidebar({ isCollapsed = false }: SidebarComponentProps) {
   const pathname = usePathname();
 
+  // Check if current path is active or a child of active path (for parallel routes)
+  const isActive = (itemUrl: string, currentPath: string) => {
+    if (itemUrl === currentPath) return true;
+    // For parallel routes, check if current path starts with item URL
+    if (currentPath.startsWith(itemUrl + '/')) return true;
+    return false;
+  };
+
   const renderNavigationGroup = (items: NavigationItem[], groupName: string) => (
     <SidebarGroup>
       <SidebarGroupLabel className="text-xs font-semibold text-slate-500 uppercase tracking-wider px-3 py-3">
@@ -32,21 +41,36 @@ export default function Sidebar({ isCollapsed = false }: SidebarComponentProps) 
       </SidebarGroupLabel>
       <SidebarGroupContent>
         <SidebarMenu>
-          {items.map((item) => (
-            <SidebarMenuItem key={item.title}>
-              <SidebarMenuButton
-                asChild
-                className={`hover:bg-blue-50/80 hover:text-blue-700 transition-all duration-300 rounded-xl mb-1 group ${
-                  pathname === item.url ? 'bg-blue-50/80 text-blue-700 shadow-sm' : ''
-                }`}
-              >
-                <Link href={item.url} className="flex items-center gap-3 px-4 py-3">
-                  <item.icon className="w-4 h-4 group-hover:scale-110 transition-transform duration-200" />
-                  {!isCollapsed && <span className="font-medium">{item.title}</span>}
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          ))}
+          {items.map((item) => {
+            const active = isActive(item.url, pathname);
+            return (
+              <SidebarMenuItem key={item.title}>
+                <SidebarMenuButton
+                  asChild
+                  className={`hover:bg-blue-50/80 hover:text-blue-700 transition-all duration-300 rounded-xl mb-1 group ${
+                    active ? 'bg-blue-50/80 text-blue-700 shadow-sm' : ''
+                  }`}
+                >
+                  <Link
+                    href={item.url}
+                    className="flex items-center gap-3 px-4 py-3"
+                  >
+                    <item.icon className="w-4 h-4 group-hover:scale-110 transition-transform duration-200" />
+                    {!isCollapsed && (
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium">{item.title}</span>
+                        {item.isParallel && (
+                          <span className="text-xs text-blue-500 bg-blue-100 px-2 py-0.5 rounded-full">
+                            Parallel
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            );
+          })}
         </SidebarMenu>
       </SidebarGroupContent>
     </SidebarGroup>
@@ -71,7 +95,7 @@ export default function Sidebar({ isCollapsed = false }: SidebarComponentProps) 
       <SidebarContent className="p-3">
         {renderNavigationGroup(navigationItems, "Core Features")}
         {renderNavigationGroup(managementItems, "Management")}
-        
+
         {/* AI Features Section */}
         {!isCollapsed && (
           <SidebarGroup>
