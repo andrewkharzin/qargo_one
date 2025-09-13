@@ -27,7 +27,9 @@
             "@/actions/*": ["./actions/*"],
             "@/layouts/*": ["./layouts/*"],
             "@/types/*": ["./types/*"],
-            "@/supabase/*": ["./supabase/*"]
+            "@/supabase/*": ["./supabase/*"],
+            "@/context/*": ["./context/*"],
+            "@/stores/*": ["./stores/*"]
         },
         "target": "ES2023"
     },

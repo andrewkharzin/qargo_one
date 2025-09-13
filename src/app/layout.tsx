@@ -1,9 +1,8 @@
 import type { ReactNode } from 'react';
-
 import type { Metadata } from 'next';
 import localFont from 'next/font/local';
-
-import { ThemeProvider } from 'next-themes';
+import { ThemeProvider } from "@/components/theme-provider"
+import { Toaster } from 'sonner'; // Add this import
 
 import '@/app/globals.css';
 
@@ -25,11 +24,17 @@ export const metadata: Metadata = {
 
 const Layout = ({ children }: Readonly<{ children: ReactNode }>) => {
     return (
-        // ? https://github.com/pacocoursey/next-themes?tab=readme-ov-file#with-app
-        // ? https://react.dev/reference/react-dom/client/hydrateRoot#suppressing-unavoidable-hydration-mismatch-errors
         <html suppressHydrationWarning lang='en'>
             <body className={`${geistSans.variable} ${geistMono.variable} bg-background text-foreground antialiased`}>
-                <ThemeProvider attribute='class'>{children}</ThemeProvider>
+                <ThemeProvider
+                  attribute="class"
+                    defaultTheme="system"
+                    enableSystem
+                    disableTransitionOnChange
+                >
+                    {children}
+                    <Toaster position="top-center" /> {/* Add Toaster here */}
+                </ThemeProvider>
             </body>
         </html>
     );

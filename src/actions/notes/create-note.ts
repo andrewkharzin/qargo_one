@@ -7,12 +7,13 @@ export async function createNote(noteData: {
   title: string;
   content: string;
   category_id?: string;
-  color?: string; // Добавлено свойство color
+  color?: string;
   is_public?: boolean;
   type?: string;
   subcategory?: string;
   priority?: number;
   urgency?: number;
+  metadata?: Record<string, any>; // Добавлено поле metadata
 }) {
   console.log('📝 createNote called with:', noteData);
 
@@ -32,7 +33,8 @@ export async function createNote(noteData: {
       .insert({
         ...noteData,
         author_id: user.id,
-        color: noteData.color || 'slate' // Значение по умолчанию
+        color: noteData.color || 'slate',
+        metadata: noteData.metadata || {} // Добавляем metadata
       })
       .select()
       .single()

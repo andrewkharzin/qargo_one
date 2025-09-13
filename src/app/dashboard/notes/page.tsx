@@ -1,29 +1,37 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useEffect, useMemo, useState } from 'react';
 
+import { useRouter } from 'next/navigation';
 // Add this import
 import { useSearchParams } from 'next/navigation';
 
 // Your other imports...
 import { deleteNote, getNotes, pinNote } from '@/actions/notes';
 import { getNoteCategories } from '@/actions/notes/categories';
+import NotesLayout from '@/components/layouts/NotesLayout';
 import CategoryFilter from '@/components/notes/CategoryFilter';
 import NoteCard from '@/components/notes/NoteCard';
+import NoteDetails from '@/components/notes/NoteDetails';
 import SearchBar from '@/components/notes/SearchBar';
 import StatsOverview from '@/components/notes/StatsOverview';
 import { Button } from '@/components/ui/button';
+import { Breadcrumb } from '@/components/ui/reuse/Breadcrumb';
 import { Category, Note } from '@/types/notes';
 
 import { AnimatePresence, motion } from 'framer-motion';
 import { Edit3, Plus } from 'lucide-react';
-import NoteDetails from '@/components/notes/NoteDetails';
+import { Notebook } from 'lucide-react';
 
 export default function NotesPage() {
     const router = useRouter();
     // Add this line to get search params
     const searchParams = useSearchParams();
+
+    const breadcrumbItems = [
+        { label: 'Dashboard', href: '/dashboard' },
+        { label: 'Notes', href: '/dashboard/notes', isCurrent: true }
+    ];
 
     const [notes, setNotes] = useState<Note[]>([]);
     const [categories, setCategories] = useState<Category[]>([]);
@@ -36,21 +44,21 @@ export default function NotesPage() {
     // Add this state to track new note IDs
     const [newNoteIds, setNewNoteIds] = useState<string[]>([]);
 
-     // Add these states for the sheet
-  const [selectedNote, setSelectedNote] = useState<Note | null>(null);
-  const [isSheetOpen, setIsSheetOpen] = useState(false);
+    // Add these states for the sheet
+    const [selectedNote, setSelectedNote] = useState<Note | null>(null);
+    const [isSheetOpen, setIsSheetOpen] = useState(false);
 
-  // Check URL for note ID to open sheet
-  useEffect(() => {
-    const noteId = searchParams.get('id');
-    if (noteId && notes.length > 0) {
-      const note = notes.find(n => n.id === noteId);
-      if (note) {
-        setSelectedNote(note);
-        setIsSheetOpen(true);
-      }
-    }
-  }, [searchParams, notes]);
+    // Check URL for note ID to open sheet
+    useEffect(() => {
+        const noteId = searchParams.get('id');
+        if (noteId && notes.length > 0) {
+            const note = notes.find((n) => n.id === noteId);
+            if (note) {
+                setSelectedNote(note);
+                setIsSheetOpen(true);
+            }
+        }
+    }, [searchParams, notes]);
 
     useEffect(() => {
         loadData();
@@ -62,11 +70,11 @@ export default function NotesPage() {
 
     // Function to add a note to the "new" list
     const addNewNoteHighlight = (noteId: string) => {
-        setNewNoteIds(prev => [...prev, noteId]);
+        setNewNoteIds((prev) => [...prev, noteId]);
 
         // Remove the highlight after 5 seconds
         setTimeout(() => {
-            setNewNoteIds(prev => prev.filter(id => id !== noteId));
+            setNewNoteIds((prev) => prev.filter((id) => id !== noteId));
         }, 5000);
     };
 
@@ -98,16 +106,17 @@ export default function NotesPage() {
             //     color: note.color || 'slate'
             // }));
             const processedNotes = (notesResponse.notes || []).map((note) => {
-            // Extract category name if it's an object, otherwise use as is
-            const categoryName = typeof note.category === 'object' && note.category !== null
-                ? (note.category as Category).name
-                : (note.category as string | undefined);
+                // Extract category name if it's an object, otherwise use as is
+                const categoryName =
+                    typeof note.category === 'object' && note.category !== null
+                        ? (note.category as Category).name
+                        : (note.category as string | undefined);
 
-            return {
-                ...note,
-                category: categoryName, // This ensures category is always string | undefined
-                color: note.color || 'slate'
-            };
+                return {
+                    ...note,
+                    category: categoryName, // This ensures category is always string | undefined
+                    color: note.color || 'slate'
+                };
             });
 
             setNotes(processedNotes);
@@ -164,12 +173,8 @@ export default function NotesPage() {
     const handlePinNote = async (noteId: string, isPinned: boolean) => {
         try {
             // Optimistically update the UI
-            setNotes(prevNotes =>
-                prevNotes.map(note =>
-                    note.id === noteId
-                        ? { ...note, is_pinned: isPinned }
-                        : note
-                )
+            setNotes((prevNotes) =>
+                prevNotes.map((note) => (note.id === noteId ? { ...note, is_pinned: isPinned } : note))
             );
 
             // Call the server action
@@ -177,12 +182,8 @@ export default function NotesPage() {
 
             if (error) {
                 // Revert on error
-                setNotes(prevNotes =>
-                    prevNotes.map(note =>
-                        note.id === noteId
-                            ? { ...note, is_pinned: !isPinned }
-                            : note
-                    )
+                setNotes((prevNotes) =>
+                    prevNotes.map((note) => (note.id === noteId ? { ...note, is_pinned: !isPinned } : note))
                 );
                 throw new Error(error);
             }
@@ -200,7 +201,7 @@ export default function NotesPage() {
                 if (error) throw new Error(error);
 
                 // Update local state instead of reloading
-                setNotes(prevNotes => prevNotes.filter(note => note.id !== noteId));
+                setNotes((prevNotes) => prevNotes.filter((note) => note.id !== noteId));
             } catch (error) {
                 console.error('Error deleting note:', error);
             }
@@ -217,8 +218,8 @@ export default function NotesPage() {
     const handleSheetOpenChange = (open: boolean) => {
         setIsSheetOpen(open);
         if (!open) {
-        // Clear the URL parameter when sheet closes
-        router.push('/dashboard/notes', { scroll: false });
+            // Clear the URL parameter when sheet closes
+            router.push('/dashboard/notes', { scroll: false });
         }
     };
 
@@ -228,116 +229,124 @@ export default function NotesPage() {
     };
 
     return (
-        <div className='min-h-screen bg-slate-50'>
-            <div className='mx-auto max-w-7xl p-4 lg:p-8'>
-                {/* Header */}
-                <div className='mb-8 flex flex-col items-start justify-between gap-4 lg:flex-row lg:items-center'>
-                    <div>
-                        <h1 className='mb-2 text-3xl font-bold text-slate-500 lg:text-4xl'>Your Notes</h1>
-                        <p className='text-slate-600'>Capture your thoughts with AI-powered organization</p>
-                    </div>
-                    <Button
-                        onClick={handleCreateNote}
-                        className='group bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg transition-all duration-300 hover:from-blue-700 hover:to-indigo-700 hover:shadow-xl'>
-                        <Plus className='mr-2 h-4 w-4 transition-transform duration-200 group-hover:rotate-90' />
-                        New Note
-                    </Button>
-                </div>
-
-                {/* Stats Overview */}
-                <StatsOverview notes={notes} categories={categories} />
-
-                {/* Search and Filters */}
-                <div className='mb-8 grid gap-4 lg:grid-cols-4'>
-                    <div className='lg:col-span-2'>
-                        <SearchBar searchTerm={searchTerm} onSearchChange={setSearchTerm} />
-                    </div>
-                    <div>
-                        <CategoryFilter
-                            categories={categories}
-                            selectedCategory={selectedCategory}
-                            onCategoryChange={setSelectedCategory}
-                        />
-                    </div>
-                    <div>
-                        <select
-                            className='w-full rounded-xl border border-slate-200 bg-white/80 px-4 py-2 backdrop-blur-sm transition-all duration-200 focus:border-transparent focus:ring-2 focus:ring-blue-500 focus:outline-none'
-                            value={sortBy}
-                            onChange={(e) => setSortBy(e.target.value)}>
-                            <option value='updated'>Recently Updated</option>
-                            <option value='created'>Recently Created</option>
-                            <option value='title'>Alphabetical</option>
-                        </select>
-                    </div>
-                </div>
-
-                {/* Notes Grid */}
-                <AnimatePresence mode='wait'>
-                    {isLoading ? (
-                        <div className='grid gap-6 md:grid-cols-2 lg:grid-cols-3'>
-                            {Array(6)
-                                .fill(0)
-                                .map((_, i) => (
-                                    <div key={i} className='animate-pulse rounded-2xl bg-white/80 p-6'>
-                                        <div className='mb-3 h-4 rounded bg-slate-200'></div>
-                                        <div className='mb-2 h-3 rounded bg-slate-200'></div>
-                                        <div className='h-3 w-3/4 rounded bg-slate-200'></div>
-                                    </div>
-                                ))}
+        <NotesLayout>
+            <div className='min-h-screen bg-slate-50'>
+                <div className='mx-auto max-w-7xl p-4 lg:p-8'>
+                    {/* Header */}
+                    <div className='mb-8 flex flex-col items-start justify-between gap-4 lg:flex-row lg:items-center'>
+                        <div>
+                            <h1 className='mb-2 flex items-center gap-3 text-3xl font-bold text-slate-500 lg:text-4xl'>
+                                <Notebook className='h-8 w-8 text-slate-600' />
+                                <span>Notes</span>
+                            </h1>
+                            <p className='text-slate-600'>Capture your thoughts with AI-powered organization</p>
                         </div>
-                    ) : filteredNotes.length === 0 ? (
-                        <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className='py-16 text-center'>
-                            <div className='mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-blue-100 to-indigo-100'>
-                                <Edit3 className='h-12 w-12 text-blue-600' />
+                        <Button
+                            onClick={handleCreateNote}
+                            className='group bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg transition-all duration-300 hover:from-blue-700 hover:to-indigo-700 hover:shadow-xl'>
+                            <Plus className='mr-2 h-4 w-4 transition-transform duration-200 group-hover:rotate-90' />
+                            New Note
+                        </Button>
+                    </div>
+                    <Breadcrumb items={breadcrumbItems} />
+
+                    <div className='mt-4'>
+                        <StatsOverview notes={notes} categories={categories} />
+                    </div>
+
+                    {/* Stats Overview */}
+                    {/* Search and Filters */}
+                    <div className='mb-8 grid gap-4 lg:grid-cols-4'>
+                        <div className='lg:col-span-2'>
+                            <SearchBar searchTerm={searchTerm} onSearchChange={setSearchTerm} />
+                        </div>
+                        <div>
+                            <CategoryFilter
+                                categories={categories}
+                                selectedCategory={selectedCategory}
+                                onCategoryChange={setSelectedCategory}
+                            />
+                        </div>
+                        <div>
+                            <select
+                                className='w-full rounded-xl border border-slate-200 bg-white/80 px-4 py-2 backdrop-blur-sm transition-all duration-200 focus:border-transparent focus:ring-2 focus:ring-blue-500 focus:outline-none'
+                                value={sortBy}
+                                onChange={(e) => setSortBy(e.target.value)}>
+                                <option value='updated'>Recently Updated</option>
+                                <option value='created'>Recently Created</option>
+                                <option value='title'>Alphabetical</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    {/* Notes Grid */}
+                    <AnimatePresence mode='wait'>
+                        {isLoading ? (
+                            <div className='grid gap-6 md:grid-cols-2 lg:grid-cols-3'>
+                                {Array(6)
+                                    .fill(0)
+                                    .map((_, i) => (
+                                        <div key={i} className='animate-pulse rounded-2xl bg-white/80 p-6'>
+                                            <div className='mb-3 h-4 rounded bg-slate-200'></div>
+                                            <div className='mb-2 h-3 rounded bg-slate-200'></div>
+                                            <div className='h-3 w-3/4 rounded bg-slate-200'></div>
+                                        </div>
+                                    ))}
                             </div>
-                            <h3 className='mb-2 text-xl font-semibold text-slate-900'>No notes found</h3>
-                            <p className='mb-6 text-slate-600'>
-                                {searchTerm || selectedCategory !== 'all'
-                                    ? 'Try adjusting your search or filters'
-                                    : 'Start writing your first note with AI assistance'}
-                            </p>
-                            {!searchTerm && selectedCategory === 'all' && (
-                                <Button
-                                    onClick={handleCreateNote}
-                                    className='bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700'>
-                                    <Plus className='mr-2 h-4 w-4' />
-                                    Create Your First Note
-                                </Button>
-                            )}
-                        </motion.div>
-                    ) : (
-                        <div className='grid gap-6 md:grid-cols-2 lg:grid-cols-3'>
-                            {filteredNotes.map((note) => (
-                                <NoteCard
-                                    key={note.id}
-                                    note={{
-                                        ...note,
-                                        word_count: note.content.split(/\s+/).length
-                                    }}
-                                    onEdit={handleEditNote}
-                                    onPin={handlePinNote}
-                                    onDelete={handleDeleteNote}
-                                    isNew={newNoteIds.includes(note.id)} // Pass the isNew prop
-                                    isSelected={selectedNote?.id === note.id} // Highlight selected note
-                                    onClick={() => handleCardClick(note)} // Add onClick handler
-                                />
-                            ))}
-                        </div>
-                    )}
-                </AnimatePresence>
-                 {/* Add NoteDetails component */}
+                        ) : filteredNotes.length === 0 ? (
+                            <motion.div
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className='py-16 text-center'>
+                                <div className='mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-blue-100 to-indigo-100'>
+                                    <Edit3 className='h-12 w-12 text-blue-600' />
+                                </div>
+                                <h3 className='mb-2 text-xl font-semibold text-slate-900'>No notes found</h3>
+                                <p className='mb-6 text-slate-600'>
+                                    {searchTerm || selectedCategory !== 'all'
+                                        ? 'Try adjusting your search or filters'
+                                        : 'Start writing your first note with AI assistance'}
+                                </p>
+                                {!searchTerm && selectedCategory === 'all' && (
+                                    <Button
+                                        onClick={handleCreateNote}
+                                        className='bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700'>
+                                        <Plus className='mr-2 h-4 w-4' />
+                                        Create Your First Note
+                                    </Button>
+                                )}
+                            </motion.div>
+                        ) : (
+                            <div className='grid gap-6 md:grid-cols-2 lg:grid-cols-3'>
+                                {filteredNotes.map((note) => (
+                                    <NoteCard
+                                        key={note.id}
+                                        note={{
+                                            ...note,
+                                            word_count: note.content.split(/\s+/).length
+                                        }}
+                                        onEdit={handleEditNote}
+                                        onPin={handlePinNote}
+                                        onDelete={handleDeleteNote}
+                                        isNew={newNoteIds.includes(note.id)} // Pass the isNew prop
+                                        isSelected={selectedNote?.id === note.id} // Highlight selected note
+                                        onClick={() => handleCardClick(note)} // Add onClick handler
+                                    />
+                                ))}
+                            </div>
+                        )}
+                    </AnimatePresence>
+                    {/* Add NoteDetails component */}
                     <NoteDetails
-                    note={selectedNote}
-                    open={isSheetOpen}
-                    onOpenChange={handleSheetOpenChange}
-                    onEdit={handleEditNote}
-                    onPin={handlePinNote}
-                    onDelete={handleDeleteNote}
+                        note={selectedNote}
+                        open={isSheetOpen}
+                        onOpenChange={handleSheetOpenChange}
+                        onEdit={handleEditNote}
+                        onPin={handlePinNote}
+                        onDelete={handleDeleteNote}
                     />
+                </div>
             </div>
-        </div>
+        </NotesLayout>
     );
 }

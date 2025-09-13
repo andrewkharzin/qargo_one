@@ -53,6 +53,12 @@ export function NoteReactions({ noteId, initialReactions, currentUserId }: NoteR
     return acc;
   }, {} as Record<string, { count: number; users: Reaction[] }>);
 
+  // Get all reaction types for hover card
+  const allReactionTypes = Object.keys(reactionGroups);
+
+  // Get only first 2 reaction types for display
+  const displayedReactions = allReactionTypes.slice(0, 2);
+
   const handleReaction = async (type: string) => {
     try {
       // Toggle reaction
@@ -104,22 +110,22 @@ export function NoteReactions({ noteId, initialReactions, currentUserId }: NoteR
         </PopoverContent>
       </Popover>
 
-      {/* Display reactions */}
+      {/* Display reactions - ограничено 2 смайлами на карточке */}
       <div className="flex -space-x-2">
-        {Object.entries(reactionGroups).map(([type, group]) => (
+        {displayedReactions.map((type) => (
           <HoverCard key={type}>
             <HoverCardTrigger asChild>
-              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+              <Button variant="ghost" size="sm" className="h-8 w-8 p-0 relative">
                 <span className="text-lg">{reactionEmojis[type]}</span>
                 <span className="absolute -top-1 -right-1 text-xs bg-muted rounded-full w-4 h-4 flex items-center justify-center">
-                  {group.count}
+                  {reactionGroups[type].count}
                 </span>
               </Button>
             </HoverCardTrigger>
             <HoverCardContent className="w-64">
-              <p className="text-sm font-semibold mb-2">{reactionNames[type]} ({group.count})</p>
+              <p className="text-sm font-semibold mb-2">{reactionNames[type]} ({reactionGroups[type].count})</p>
               <div className="flex flex-wrap gap-2">
-                {group.users.map(u => (
+                {reactionGroups[type].users.map(u => (
                   <div key={u.id} className="flex items-center gap-2">
                     <Avatar className="w-6 h-6">
                       <AvatarImage src={u.user_profile?.avatar_url || ''} />
@@ -132,6 +138,28 @@ export function NoteReactions({ noteId, initialReactions, currentUserId }: NoteR
             </HoverCardContent>
           </HoverCard>
         ))}
+
+        {/* Показываем счетчик остальных реакций, если есть больше 2 */}
+        {allReactionTypes.length > 2 && (
+          <HoverCard>
+            <HoverCardTrigger asChild>
+              <Button variant="ghost" size="sm" className="h-8 px-2">
+                +{allReactionTypes.length - 2}
+              </Button>
+            </HoverCardTrigger>
+            <HoverCardContent className="w-64">
+              <p className="text-sm font-semibold mb-2">Все реакции ({reactions.length})</p>
+              <div className="space-y-2">
+                {allReactionTypes.slice(2).map(type => (
+                  <div key={type} className="flex items-center gap-2">
+                    <span className="text-lg">{reactionEmojis[type]}</span>
+                    <span className="text-xs font-medium">{reactionNames[type]}: {reactionGroups[type].count}</span>
+                  </div>
+                ))}
+              </div>
+            </HoverCardContent>
+          </HoverCard>
+        )}
       </div>
     </div>
   );

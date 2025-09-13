@@ -1,17 +1,14 @@
 'use client';
 
 import { useState } from 'react';
-
 import { useRouter } from 'next/navigation';
-
 import { createNote } from '@/actions/notes';
 import NoteEditor from '@/components/notes/NoteEditor';
 import { Button } from '@/components/ui/button';
 import { Category } from '@/types/notes';
-
 import { ArrowLeft } from 'lucide-react';
-
 import ErrorBoundary from '@/components/ErrorBoundary';
+import { toast } from 'sonner';
 
 interface CreateNoteClientProps {
     categories: Category[];
@@ -20,56 +17,74 @@ interface CreateNoteClientProps {
 export default function CreateNoteClient({ categories }: CreateNoteClientProps) {
     const router = useRouter();
     const [isSaving, setIsSaving] = useState(false);
-    const [debugInfo, setDebugInfo] = useState<string[]>([]); // Add debug state
+    const [debugInfo, setDebugInfo] = useState<string[]>([]);
 
     const addDebug = (message: string) => {
         console.log(message);
         setDebugInfo((prev) => [...prev, `${new Date().toISOString()}: ${message}`]);
     };
 
-   // In CreateNoteClient.tsx - Update the handleSave function
     const handleSave = async (noteData: { title: string; content: string; category: string; color: string; }) => {
-    alert('Save function called! Check console.');
-    console.log('🔄 Save function called with:', noteData);
-    addDebug('🔄 Starting save with data: ' + JSON.stringify(noteData));
-    setIsSaving(true);
+        setIsSaving(true);
+        const toastId = toast.loading('Creating note...');
 
-    try {
-        addDebug('📤 Calling createNote server action...');
-        const result = await createNote({
-        title: noteData.title,
-        content: noteData.content,
-        category_id: noteData.category || undefined,
-        color: noteData.color,
-        is_public: false,
-        type: 'note',
-        priority: 3,
-        urgency: 3
-        });
+        try {
+            addDebug('📤 Calling createNote server action...');
+            const result = await createNote({
+                title: noteData.title,
+                content: noteData.content,
+                category_id: noteData.category || undefined,
+                color: noteData.color,
+                is_public: false,
+                type: 'note',
+                priority: 3,
+                urgency: 3
+            });
 
-        addDebug('📥 Server action response: ' + JSON.stringify(result));
+            addDebug('📥 Server action response: ' + JSON.stringify(result));
 
-        if (result.error) {
-        addDebug('❌ Server error: ' + result.error);
-        throw new Error(result.error);
+            if (result.error) {
+                addDebug('❌ Server error: ' + result.error);
+                toast.error('Failed to create note', {
+                    id: toastId,
+                    description: result.error
+                });
+                return;
+            }
+
+            if (result.note) {
+                toast.success('Note created successfully!', {
+                    id: toastId,
+                    description: `"${noteData.title}" has been saved`,
+                    action: {
+                        label: 'View Note',
+                        onClick: () => router.push(`/dashboard/notes/${result.note.id}`)
+                    },
+                });
+
+                // Ждем немного перед редиректом, чтобы пользователь увидел toast
+                setTimeout(() => {
+                    router.push(`/dashboard/notes?newNote=${result.note.id}`);
+                    router.refresh();
+                }, 2000);
+
+            } else {
+                addDebug('❌ No note returned from server');
+                toast.error('Failed to create note', {
+                    id: toastId,
+                    description: 'No note data returned from server'
+                });
+            }
+        } catch (error) {
+            addDebug('❌ Error in handleSave: ' + error);
+            toast.error('Failed to create note', {
+                id: toastId,
+                description: error instanceof Error ? error.message : 'Please try again.'
+            });
+        } finally {
+            addDebug('🏁 Save process completed');
+            setIsSaving(false);
         }
-
-        if (result.note) {
-        addDebug('✅ Note created successfully, redirecting...');
-        // CHANGE THIS LINE - Add the newNote parameter
-        router.push(`/dashboard/notes?newNote=${result.note.id}`);
-        router.refresh();
-        } else {
-        addDebug('❌ No note returned from server');
-        throw new Error('Failed to create note');
-        }
-    } catch (error) {
-        addDebug('❌ Error in handleSave: ' + error);
-        alert(error instanceof Error ? error.message : 'Failed to create note. Please try again.');
-    } finally {
-        addDebug('🏁 Save process completed');
-        setIsSaving(false);
-    }
     };
 
     const handleCancel = () => {

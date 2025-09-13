@@ -1,9 +1,8 @@
 // components/layouts/Sidebar/NavigationItems.tsx
 import {
-  PenTool,
+  BookOpen,
   Sparkles,
   FolderOpen,
-  BookOpen,
   Globe,
   Bookmark,
   Users,
@@ -12,66 +11,101 @@ import {
   Building2,
   UserCheck,
   Plane,
+  List,
+  Grid,
+  Tag,
+  Calendar,
 } from "lucide-react";
-import { NavigationItem } from './types';
+import { NavigationItem, NavigationLink, NavigationMenu } from './types';
 
 export const navigationItems: NavigationItem[] = [
   {
-    title: "Enhanced Notes",
-    url: "/dashboard/notes",
+    type: 'menu',
+    title: "Notes",
     icon: BookOpen,
     group: "Core Features",
-    isParallel: true // Flag for parallel routes
+    isParallel: true,
+    items: [
+      {
+        title: "All Notes",
+        url: "/dashboard/notes",
+        icon: Grid,
+        description: "View all your notes",
+        badge: "12"
+      },
+      {
+        title: "Categories",
+        url: "/dashboard/notes/categories",
+        icon: Tag,
+        description: "Organize by categories"
+      },
+      {
+        title: "Note types",
+        url: "/dashboard/notes/note-types",
+        icon: List,
+        description: "Grid view of note types",
+        badge: "new"
+      }
+    ]
   },
   {
-    title: "Notes categories",
-    url: "/dashboard/notes/categories",
-    icon: BookOpen,
-    group: "Core Features"
-  },
-  {
+    type: 'link',
     title: "AI Generator",
     url: "/dashboard/ai-generator",
     icon: Sparkles,
     group: "Core Features"
   },
   {
+    type: 'link',
     title: "Projects",
     url: "/dashboard/projects",
     icon: FolderOpen,
     group: "Core Features"
   },
   {
-    title: "Web Research",
-    url: "/dashboard/web-research",
-    icon: Globe,
-    group: "Core Features"
-  },
-  {
-    title: "Bookmarks",
-    url: "/dashboard/bookmarks",
+    type: 'menu',
+    title: "Content",
     icon: Bookmark,
-    group: "Core Features"
+    group: "Core Features",
+    items: [
+      {
+        title: "Web Research",
+        url: "/dashboard/web-research",
+        icon: Globe,
+        description: "Research and save content"
+      },
+      {
+        title: "Bookmarks",
+        url: "/dashboard/bookmarks",
+        icon: Bookmark,
+        description: "Saved bookmarks",
+        badge: "8"
+      }
+    ]
   },
   {
+    type: 'link',
     title: "Team",
     url: "/dashboard/team",
     icon: Users,
     group: "Core Features"
   },
   {
+    type: 'link',
     title: "API Documentation",
     url: "/dashboard/api-docs",
     icon: FileCode,
     group: "Resources"
   },
   {
+    type: 'link',
     title: "Components",
     url: "/dashboard/components",
     icon: Package,
     group: "Resources"
   },
   {
+    type: 'link',
     title: "Company",
     url: "/dashboard/company",
     icon: Building2,
@@ -81,15 +115,30 @@ export const navigationItems: NavigationItem[] = [
 
 export const managementItems: NavigationItem[] = [
   {
+    type: 'link',
     title: "Agents",
     url: "/dashboard/agents",
     icon: UserCheck,
     group: "Management"
   },
   {
-    title: "Travel",
-    url: "/dashboard/travel",
-    icon: Plane,
-    group: "Management"
+    type: 'menu',
+    title: "Operations",
+    icon: Calendar,
+    group: "Management",
+    items: [
+      {
+        title: "Travel",
+        url: "/dashboard/travel",
+        icon: Plane,
+        description: "Travel management"
+      },
+      {
+        title: "Calendar",
+        url: "/dashboard/calendar",
+        icon: Calendar,
+        description: "Schedule management"
+      }
+    ]
   },
 ];

@@ -228,6 +228,51 @@
   }
 }
 
+
+/* Styles for user notes reactions */
+
 .animate-pulse-star {
   animation: pulse-star 3s ease-in-out infinite;
+}
+
+
+/* Улучшенные стили для кнопок и реакций */
+.card-footer {
+  display: flex;
+  flex-direction: column-reverse; /* Реакции сверху, кнопки снизу */
+  gap: 12px;
+}
+
+.reactions-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.reaction-button {
+  transition: all 0.2s ease;
+  border-radius: 16px;
+  padding: 4px 8px;
+}
+
+.reaction-button:hover {
+  background-color: #f3f4f6;
+  transform: translateY(-1px);
+}
+
+.action-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 4px;
+}
+
+.action-button {
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.action-button:hover {
+  background-color: #f3f4f6;
+  transform: scale(1.05);
 }

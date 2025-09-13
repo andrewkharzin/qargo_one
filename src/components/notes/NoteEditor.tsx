@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 
 import dynamic from 'next/dynamic';
 
+import WrhApt, { WrhAptData } from '@/components/notes/templates/procedures/WrhApt';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -85,7 +86,15 @@ interface TemplateField {
 interface NoteEditorProps {
     note?: Note;
     categories: Category[];
-    onSave: (note: { title: string; content: string; category: string; color: string }) => void;
+    onSave: (note: {
+        title: string;
+        content: string;
+        category: string;
+        color: string;
+        type: string;
+        metadata?: Record<string, any>;
+        // Add other fields you need to save
+    }) => void;
     onCancel: () => void;
     isSaving?: boolean;
 }
@@ -190,239 +199,49 @@ const documentTypeOptions: DocumentTypeOption[] = [
         category: 'General',
         description: 'Save and organize important links'
     },
+    // {
+    //     value: 'procedure',
+    //     label: 'Procedure',
+    //     icon: CheckSquare,
+    //     category: 'Process',
+    //     description: 'Step-by-step instructions for a process'
+    // },
     {
-        value: 'procedure',
-        label: 'Procedure',
-        icon: CheckSquare,
-        category: 'Process',
-        description: 'Step-by-step instructions for a process'
-    },
-    {
-        value: 'checklist',
-        label: 'Checklist',
-        icon: ListTodo,
-        category: 'Process',
-        description: 'Task list with completion tracking'
-    },
-    {
-        value: 'template',
-        label: 'Template',
-        icon: LayoutIcon,
-        category: 'Process',
-        description: 'Reusable document structure'
-    },
-    {
-        value: 'sop',
-        label: 'SOP',
-        icon: Settings,
-        category: 'Process',
-        description: 'Standard Operating Procedure document'
-    },
-    {
-        value: 'workflow',
-        label: 'Workflow',
-        icon: Workflow,
-        category: 'Process',
-        description: 'Process flow with multiple steps'
-    },
-    {
-        value: 'problem',
-        label: 'Problem',
-        icon: AlertTriangle,
-        category: 'Issues',
-        description: 'Documentation of an identified issue'
-    },
-    {
-        value: 'incident',
-        label: 'Incident',
-        icon: Bug,
-        category: 'Issues',
-        description: 'Record of an unexpected event or outage'
-    },
-    {
-        value: 'solution',
-        label: 'Solution',
-        icon: Lightbulb,
-        category: 'Issues',
-        description: 'Resolution to a problem or issue'
-    },
-    {
-        value: 'workaround',
-        label: 'Workaround',
-        icon: Settings,
-        category: 'Issues',
-        description: 'Temporary fix for an ongoing problem'
-    },
-    { value: 'risk', label: 'Risk', icon: Shield, category: 'Issues', description: 'Potential issue that might occur' },
-    {
-        value: 'client_request',
-        label: 'Client Request',
-        icon: Users,
-        category: 'Client',
-        description: 'Formal request from a client'
-    },
-    {
-        value: 'client_feedback',
-        label: 'Client Feedback',
-        icon: MessageSquare,
-        category: 'Client',
-        description: 'Feedback received from clients'
-    },
-    {
-        value: 'complaint',
-        label: 'Complaint',
-        icon: ThumbsDown,
-        category: 'Client',
-        description: 'Formal complaint from a client'
-    },
-    {
-        value: 'approval',
-        label: 'Approval',
-        icon: CheckCircle,
-        category: 'Client',
-        description: 'Document requiring client approval'
-    },
-    {
-        value: 'email',
-        label: 'Email',
-        icon: Mail,
-        category: 'Communication',
-        description: 'Record of important email correspondence'
-    },
-    {
-        value: 'message',
-        label: 'Message',
-        icon: MessageSquare,
-        category: 'Communication',
-        description: 'Important chat or message record'
-    },
-    {
-        value: 'meeting_notes',
-        label: 'Meeting Notes',
-        icon: Calendar,
-        category: 'Communication',
-        description: 'Notes from meetings or discussions'
-    },
-    {
-        value: 'call_summary',
-        label: 'Call Summary',
-        icon: Phone,
-        category: 'Communication',
-        description: 'Summary of important phone calls'
-    },
-    {
-        value: 'knowledge_base',
-        label: 'Knowledge Base',
-        icon: BookOpen,
-        category: 'Knowledge',
-        description: 'Information for reference and training'
-    },
-    {
-        value: 'training',
-        label: 'Training',
-        icon: GraduationCap,
-        category: 'Knowledge',
-        description: 'Training materials and guides'
-    },
-    {
-        value: 'best_practice',
-        label: 'Best Practice',
-        icon: Award,
-        category: 'Knowledge',
-        description: 'Recommended approaches and methods'
-    },
-    {
-        value: 'lesson_learned',
-        label: 'Lesson Learned',
-        icon: Lightbulb,
-        category: 'Knowledge',
-        description: 'Insights gained from experience'
-    },
-    {
-        value: 'reminder',
-        label: 'Reminder',
-        icon: Clock,
-        category: 'System',
-        description: 'Note to remember important tasks or events'
-    },
-    {
-        value: 'alert',
-        label: 'Alert',
-        icon: Bell,
-        category: 'System',
-        description: 'Important notification or warning'
-    },
-    {
-        value: 'auto_generated',
-        label: 'Auto Generated',
-        icon: Database,
-        category: 'System',
-        description: 'Automatically created note or report'
-    },
-    {
-        value: 'system_log',
-        label: 'System Log',
-        icon: FileText,
-        category: 'System',
-        description: 'Record of system events or changes'
-    },
-    {
-        value: 'booking_notes',
-        label: 'Booking Notes',
-        icon: Calendar,
-        category: 'Travel',
-        description: 'Details about travel bookings'
-    },
-    {
-        value: 'flight_notes',
-        label: 'Flight Notes',
-        icon: Plane,
-        category: 'Travel',
-        description: 'Information about flights'
-    },
-    {
-        value: 'airline_notes',
-        label: 'Airline Notes',
-        icon: Plane,
-        category: 'Travel',
-        description: 'Notes about airlines and services'
-    },
-    {
-        value: 'airport_notes',
-        label: 'Airport Notes',
+        value: 'wrh_apt', // FIXED: Changed from 'wrh_apt_procedure' to 'wrh_apt'
+        label: 'Warehouse Procedure',
         icon: Building,
-        category: 'Travel',
-        description: 'Information about airports'
+        category: 'Process',
+        description: 'Airline warehouse handling procedures for cargo shipments'
     },
-    {
-        value: 'emergency',
-        label: 'Emergency',
-        icon: Siren,
-        category: 'Critical',
-        description: 'Emergency procedures and contacts'
-    },
-    {
-        value: 'legal',
-        label: 'Legal',
-        icon: Scale,
-        category: 'Critical',
-        description: 'Legal documents and requirements'
-    },
-    {
-        value: 'compliance',
-        label: 'Compliance',
-        icon: FileCheck,
-        category: 'Critical',
-        description: 'Compliance-related documentation'
-    },
-    { value: 'audit', label: 'Audit', icon: Search, category: 'Critical', description: 'Audit records and findings' },
-    {
-        value: 'task',
-        label: 'Task',
-        icon: CheckSquare,
-        category: 'Critical',
-        description: 'Individual task or assignment'
-    }
+    // {
+    //     value: 'checklist',
+    //     label: 'Checklist',
+    //     icon: ListTodo,
+    //     category: 'Process',
+    //     description: 'Task list with completion tracking'
+    // },
+    // {
+    //     value: 'template',
+    //     label: 'Template',
+    //     icon: LayoutIcon,
+    //     category: 'Process',
+    //     description: 'Reusable document structure'
+    // },
+    // {
+    //     value: 'sop',
+    //     label: 'SOP',
+    //     icon: Settings,
+    //     category: 'Process',
+    //     description: 'Standard Operating Procedure document'
+    // },
+    // {
+    //     value: 'workflow',
+    //     label: 'Workflow',
+    //     icon: Workflow,
+    //     category: 'Process',
+    //     description: 'Process flow with multiple steps'
+    // }
+    // ... rest of your document types
 ];
 
 // Helper to group document types by category for the Select component
@@ -445,16 +264,11 @@ export default function NoteEditor({ note, categories, onSave, onCancel, isSavin
         is_public: false,
         type: 'note',
         priority: 3,
-        urgency: 3
+        urgency: 3,
+        templateData: {} as Record<string, any>
     });
     const [newTag, setNewTag] = useState('');
     const [debugLogs, setDebugLogs] = useState<string[]>([]);
-
-    // Get the selected color class
-    const selectedColor = colorOptions.find((option) => option.value === formData.color) || colorOptions[0];
-
-    // Apply color to the editor container
-    const editorContainerClass = `overflow-hidden rounded-2xl border ${selectedColor.borderClass} ${selectedColor.bgClass} shadow-xl backdrop-blur-sm`;
 
     // Debug logging function
     const addDebugLog = (message: string) => {
@@ -462,6 +276,18 @@ export default function NoteEditor({ note, categories, onSave, onCancel, isSavin
         const logMessage = `${timestamp}: ${message}`;
         console.log('📝 NoteEditor:', logMessage);
         setDebugLogs((prev) => [...prev, logMessage]);
+    };
+
+    // Get the selected color class
+    const selectedColor = colorOptions.find((option) => option.value === formData.color) || colorOptions[0];
+
+    // Add a function to handle template data changes
+    const handleTemplateDataChange = (data: Record<string, any>) => {
+        addDebugLog(`Template data changed: ${JSON.stringify(data).substring(0, 100)}...`);
+        setFormData((prev) => ({
+            ...prev,
+            templateData: data
+        }));
     };
 
     useEffect(() => {
@@ -478,7 +304,8 @@ export default function NoteEditor({ note, categories, onSave, onCancel, isSavin
                 is_public: note.is_public || false,
                 type: note.type || 'note',
                 priority: note.priority || 3,
-                urgency: note.urgency || 3
+                urgency: note.urgency || 3,
+                templateData: note.metadata?.templateData || {}
             });
         } else {
             addDebugLog('Creating new note');
@@ -533,17 +360,38 @@ export default function NoteEditor({ note, categories, onSave, onCancel, isSavin
         addDebugLog('✅ Validation passed, calling onSave');
         try {
             addDebugLog('📤 Calling parent onSave function...');
-            await onSave({
+
+            // Prepare note data with template information
+            const noteData = {
                 title: formData.title,
                 content: formData.content,
                 category: formData.category_id,
-                color: formData.color // Add this
-            });
+                color: formData.color,
+                type: formData.type,
+                metadata: {
+                    templateData: formData.templateData
+                }
+            };
+
+            await onSave(noteData);
             addDebugLog('✅ onSave completed successfully');
         } catch (error) {
             addDebugLog(`❌ Error in onSave: ${error}`);
             console.error('Error saving note:', error);
             alert('Failed to save note. Please try again.');
+        }
+    };
+
+    // Add this function to render the appropriate template
+    const renderTemplateForm = () => {
+        switch (formData.type) {
+            case 'wrh_apt':
+                return (
+                    <WrhApt data={formData.templateData as Partial<WrhAptData>} onChange={handleTemplateDataChange} />
+                );
+            // Add more cases for other templates as needed
+            default:
+                return null;
         }
     };
 
@@ -565,7 +413,7 @@ export default function NoteEditor({ note, categories, onSave, onCancel, isSavin
     };
 
     return (
-        <div className='min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20'>
+        <div className='min-h-screen'>
             <div className='mx-auto max-w-4xl p-4 lg:p-8'>
                 {/* Debug Panel */}
                 <div className='mb-4 rounded-lg border border-yellow-200 bg-yellow-50 p-4'>
@@ -592,6 +440,11 @@ export default function NoteEditor({ note, categories, onSave, onCancel, isSavin
                             <h1 className='text-2xl font-bold text-slate-900'>
                                 {note ? 'Edit Note' : 'Create New Note'}
                             </h1>
+                            {formData.type === 'wrh_apt' && formData.templateData?.generatedDocumentNumber && (
+                                <p className='font-mono text-sm text-slate-600'>
+                                    №: {formData.templateData.generatedDocumentNumber}
+                                </p>
+                            )}
                             <p className='text-slate-600'>Create and edit your notes</p>
                         </div>
                     </div>
@@ -611,7 +464,6 @@ export default function NoteEditor({ note, categories, onSave, onCancel, isSavin
                     </div>
                 </div>
 
-                {/* Editor Form */}
                 {/* Editor Form */}
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
@@ -633,7 +485,7 @@ export default function NoteEditor({ note, categories, onSave, onCancel, isSavin
                                     required
                                 />
                             </div>
-                            <div>
+                            <div className="">
                                 <label className='mb-2 block text-sm font-medium text-slate-700'>Document Type</label>
                                 <Select
                                     value={formData.type}
@@ -654,7 +506,7 @@ export default function NoteEditor({ note, categories, onSave, onCancel, isSavin
                                                     <SelectItem key={type.value} value={type.value}>
                                                         <div className='flex flex-col'>
                                                             <div className='flex items-center gap-2'>
-                                                                <type.icon className='h-4 w-4' />
+                                                                <type.icon className='h-2 w-2' />
                                                                 <span className='font-medium'>{type.label}</span>
                                                             </div>
                                                             <div className='mt-1 ml-6 text-xs text-slate-500'>
@@ -790,6 +642,9 @@ export default function NoteEditor({ note, categories, onSave, onCancel, isSavin
                                 placeholder='Start writing your note content...'
                             />
                         </div>
+
+                        {/* Template-specific fields - MOVED INSIDE THE EDITOR CONTAINER */}
+                        {renderTemplateForm()}
                     </div>
 
                     {/* Tags Section with applied color */}
