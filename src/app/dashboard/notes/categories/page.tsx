@@ -23,7 +23,9 @@ import {
   LucideIcon,
   Home,
   Folder,
-  ArrowLeft
+  ArrowLeft,
+  Sparkles,
+  Loader2
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -35,6 +37,7 @@ import {
 } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Breadcrumb } from '@/components/ui/reuse/Breadcrumb';
+import { toast } from "sonner";
 // Import your server actions
 import { getNoteCategories, createCategory, updateCategory, deleteCategory } from "@/actions/notes/categories";
 import { getNotes } from "@/actions/notes";
@@ -95,8 +98,6 @@ const iconComponents: Record<string, LucideIcon> = {
   Star, Music, Camera, Coffee, Lightbulb, Cpu
 };
 
-
-
 export default function CategoriesPage() {
   const [categories, setCategories] = useState<NoteCategory[]>([]);
   const [notes, setNotes] = useState<Note[]>([]);
@@ -110,20 +111,9 @@ export default function CategoriesPage() {
   });
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isSaving, setIsSaving] = useState<boolean>(false);
-  const [isDarkMode, setIsDarkMode] = useState<boolean>(false);
 
   useEffect(() => {
     loadData();
-    // Check for dark mode preference
-    const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    setIsDarkMode(isDark);
-
-    // Listen for changes
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    const handleChange = (e: MediaQueryListEvent) => setIsDarkMode(e.matches);
-    mediaQuery.addEventListener('change', handleChange);
-
-    return () => mediaQuery.removeEventListener('change', handleChange);
   }, []);
 
   const loadData = async (): Promise<void> => {
@@ -136,17 +126,26 @@ export default function CategoriesPage() {
 
       if (categoriesResponse.error) {
         console.error("Error loading categories:", categoriesResponse.error);
+        toast.error("Error loading categories", {
+          description: "Please try again later"
+        });
       } else {
         setCategories(categoriesResponse.categories || []);
       }
 
       if (notesResponse.error) {
         console.error("Error loading notes:", notesResponse.error);
+        toast.error("Error loading notes", {
+          description: "Please try again later"
+        });
       } else {
         setNotes(notesResponse.notes || []);
       }
     } catch (error) {
       console.error("Error loading data:", error);
+      toast.error("Error loading data", {
+        description: "Please try again later"
+      });
     }
     setIsLoading(false);
   };
@@ -201,9 +200,14 @@ export default function CategoriesPage() {
         }
       setShowDialog(false);
       await loadData();
+      toast.success(editingCategory ? "Category updated" : "Category created", {
+        description: `${formData.name} has been ${editingCategory ? 'updated' : 'created'} successfully`
+      });
     } catch (error) {
       console.error("Error saving category:", error);
-      alert(error instanceof Error ? error.message : "Failed to save category");
+      toast.error("Error saving category", {
+        description: error instanceof Error ? error.message : "Please try again later"
+      });
     }
     setIsSaving(false);
   };
@@ -222,9 +226,14 @@ export default function CategoriesPage() {
         const { error } = await deleteCategory(categoryId);
         if (error) throw new Error(error);
         await loadData();
+        toast.success("Category deleted", {
+          description: `${categoryName} has been deleted successfully`
+        });
       } catch (error) {
         console.error("Error deleting category:", error);
-        alert(error instanceof Error ? error.message : "Failed to delete category");
+        toast.error("Error deleting category", {
+          description: error instanceof Error ? error.message : "Please try again later"
+        });
       }
     }
   };
@@ -235,139 +244,149 @@ export default function CategoriesPage() {
     { label: 'Categories', href: '/dashboard/categories', isCurrent: true }
   ];
 
-return (
-    <div className="min-h-screen  dark:bg-slate-950 dark:text-white transition-colors duration-300">
-      <div className="max-w-6xl mx-auto p-4 lg:p-8">
-        {/* Breadcrumb */}
-
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-purple-50 dark:from-slate-900 dark:via-slate-800 dark:to-purple-900/20">
+      <div className="max-w-7xl mx-auto p-4 lg:p-8">
         {/* Header */}
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8 gap-4">
-          <div className='flex items-center gap-4'>
-                        <Button variant='outline' size='icon'  className='hover:bg-accent'>
-                            <ArrowLeft className='h-4 w-4' />
-                        </Button>
-                        <div className='flex items-center gap-3'>
-                            <Folder className='h-8 w-8 text-muted-foreground' />
-                            <div className="flex flex-col">
+          <div className="relative">
+            <div className="absolute -inset-4 bg-gradient-to-r from-purple-500/10 to-indigo-500/10 blur-2xl"></div>
+            <h1 className="text-3xl lg:text-4xl font-bold text-slate-800 dark:text-white mb-2 flex items-center gap-3 relative">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 shadow-lg">
+                <Folder className="w-6 h-6 text-white" />
+              </div>
+              <span>Categories</span>
+              <Sparkles className="h-5 w-5 text-yellow-400" />
+            </h1>
+            <p className="text-slate-600 dark:text-slate-400 relative">
+              Organize your notes with beautiful categories
+            </p>
+          </div>
 
-                            <h1 className='text-xl font-bold text-foreground'>Categories</h1>
-                            <p className="text-slate-400">Organize notes with categories</p>
-                            </div>
-                        </div>
-                    </div>
           <Button
             onClick={handleCreateCategory}
-            className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 group"
+            className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 group relative overflow-hidden"
           >
+            <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
             <Plus className="w-4 h-4 mr-2 group-hover:rotate-90 transition-transform duration-200" />
             New Category
           </Button>
         </div>
-         <Breadcrumb items={breadcrumbItems} />
 
         {/* Categories Grid */}
         <div className="mt-6">
-        <AnimatePresence mode="wait">
-          {isLoading ? (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {Array(6).fill(0).map((_, i) => (
-                <div key={i} className="bg-white/80 dark:bg-slate-900 rounded-2xl p-6 animate-pulse">
-                  <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded mb-3"></div>
-                  <div className="h-3 bg-slate-200 dark:bg-slate-700 rounded mb-2"></div>
-                  <div className="h-3 bg-slate-200 dark:bg-slate-700 rounded w-3/4"></div>
-                </div>
-              ))}
-            </div>
-          ) : categories.length === 0 ? (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="text-center py-16"
-            >
-              <div className="w-24 h-24 bg-gradient-to-br from-purple-100 to-indigo-100 dark:from-slate-800 dark:to-slate-800 rounded-full flex items-center justify-center mx-auto mb-6">
-                <FolderOpen className="w-12 h-12 text-purple-600 dark:text-purple-400" />
+          <AnimatePresence mode="wait">
+            {isLoading ? (
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <Card key={i} className="overflow-hidden bg-white/80 backdrop-blur-sm border-0 shadow-lg dark:bg-slate-800/80 dark:border-slate-700/30">
+                    <CardContent className="p-6">
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="h-12 w-12 bg-slate-200 dark:bg-slate-700 rounded-xl animate-pulse"></div>
+                        <div className="space-y-2 flex-1">
+                          <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-3/4"></div>
+                          <div className="h-3 bg-slate-200 dark:bg-slate-700 rounded w-1/2"></div>
+                        </div>
+                      </div>
+                      <div className="h-3 bg-slate-200 dark:bg-slate-700 rounded mb-2"></div>
+                      <div className="h-3 bg-slate-200 dark:bg-slate-700 rounded w-2/3"></div>
+                    </CardContent>
+                  </Card>
+                ))}
               </div>
-              <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-2">No categories yet</h3>
-              <p className="text-slate-600 dark:text-slate-400 mb-6">Create categories to organize your notes better</p>
-              <Button
-                onClick={handleCreateCategory}
-                className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
+            ) : categories.length === 0 ? (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="text-center py-16"
               >
-                <Plus className="w-4 h-4 mr-2" />
-                Create Your First Category
-              </Button>
-            </motion.div>
-          ) : (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {categories.map((category) => {
-                const IconComponent = iconComponents[category.icon || "FolderOpen"] || FolderOpen;
-                const noteCount = getCategoryStats(category.name);
-                const colorOption = colorOptions.find(c => c.value === category.color) || colorOptions[0];
+                <div className="w-24 h-24 bg-gradient-to-br from-purple-100 to-indigo-100 dark:from-purple-900/30 dark:to-indigo-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <FolderOpen className="w-12 h-12 text-purple-600 dark:text-purple-400" />
+                </div>
+                <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-2">No categories yet</h3>
+                <p className="text-slate-600 dark:text-slate-400 mb-6">Create categories to organize your notes better</p>
+                <Button
+                  onClick={handleCreateCategory}
+                  className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Create Your First Category
+                </Button>
+              </motion.div>
+            ) : (
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {categories.map((category) => {
+                  const IconComponent = iconComponents[category.icon || "FolderOpen"] || FolderOpen;
+                  const noteCount = getCategoryStats(category.name);
+                  const colorOption = colorOptions.find(c => c.value === category.color) || colorOptions[0];
 
-                return (
-                  <motion.div
-                    key={category.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
-                  >
-                    <Card className="backdrop-blur-sm dark:bg-slate-900  border-b shadow-lg hover:shadow-xl transition-all duration-300 group">
-                      <CardHeader className="pb-3">
-                        <div className="flex items-start justify-between">
-                          <div className="flex items-center gap-3">
-                            <div className={`w-12 h-12 rounded-xl flex items-center justify-center shadow-lg ${colorOption.class}`}>
-                              <IconComponent className="w-6 h-6 text-white" />
-                            </div>
-                            <div>
-                              <CardTitle className="text-md font-semibold text-slate-900 dark:text-white">
-                                {category.name}
-                              </CardTitle>
-                              <div className="flex items-center gap-2 mt-1">
-                                <Badge variant="secondary" className="text-xs dark:bg-slate-800 dark:text-slate-300">
-                                  <FileText className="w-3 h-3 mr-1" />
-                                  {noteCount} notes
-                                </Badge>
+                  return (
+                    <motion.div
+                      key={category.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -20 }}
+                      whileHover={{ y: -5 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 group dark:bg-slate-800/80 dark:border-slate-700/30 rounded-2xl overflow-hidden">
+                        <CardHeader className="pb-3">
+                          <div className="flex items-start justify-between">
+                            <div className="flex items-center gap-3">
+                              <div className={`w-12 h-12 rounded-xl flex items-center justify-center shadow-lg ${colorOption.class}`}>
+                                <IconComponent className="w-6 h-6 text-white" />
+                              </div>
+                              <div>
+                                <CardTitle className="text-md font-semibold text-slate-900 dark:text-white">
+                                  {category.name}
+                                </CardTitle>
+                                <div className="flex items-center gap-2 mt-1">
+                                  <Badge variant="secondary" className="text-xs bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-700/50">
+                                    <FileText className="w-3 h-3 mr-1" />
+                                    {noteCount} notes
+                                  </Badge>
+                                </div>
                               </div>
                             </div>
+                            <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleEditCategory(category)}
+                                className="h-8 w-8 hover:bg-slate-100 dark:hover:bg-slate-700/50"
+                              >
+                                <Edit3 className="w-3 h-3" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleDeleteCategory(category.id, category.name)}
+                                className="h-8 w-8 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/30 dark:hover:text-red-400"
+                              >
+                                <Trash2 className="w-3 h-3" />
+                              </Button>
+                            </div>
                           </div>
-                          <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleEditCategory(category)}
-                              className="h-8 w-8 hover:bg-slate-100 dark:hover:bg-slate-800"
-                            >
-                              <Edit3 className="w-3 h-3" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleDeleteCategory(category.id, category.name)}
-                              className="h-8 w-8 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/30 dark:hover:text-red-400"
-                            >
-                              <Trash2 className="w-3 h-3" />
-                            </Button>
-                          </div>
-                        </div>
-                      </CardHeader>
-                      {category.description && (
-                        <CardContent className="pt-0">
-                          <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
-                            {category.description}
-                          </p>
-                        </CardContent>
-                      )}
-                    </Card>
-                  </motion.div>
-                );
-              })}
-            </div>
-          )}
-        </AnimatePresence>
+                        </CardHeader>
+                        {category.description && (
+                          <CardContent className="pt-0">
+                            <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+                              {category.description}
+                            </p>
+                          </CardContent>
+                        )}
+                      </Card>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            )}
+          </AnimatePresence>
         </div>
+
         {/* Create/Edit Dialog */}
         <Dialog open={showDialog} onOpenChange={setShowDialog}>
-          <DialogContent className="sm:max-w-lg bg-white dark:bg-slate-900 border-0 shadow-2xl rounded-3xl p-0 overflow-hidden">
+          <DialogContent className="sm:max-w-lg bg-white/90 backdrop-blur-md dark:bg-slate-900/90 border-0 shadow-2xl rounded-3xl p-0 overflow-hidden">
             <div className="bg-gradient-to-r from-purple-600 to-indigo-600 px-8 py-6">
               <DialogHeader>
                 <DialogTitle className="text-2xl font-bold text-white">
@@ -379,7 +398,7 @@ return (
               </DialogHeader>
             </div>
 
-            <div className="px-8 py-6 bg-white dark:bg-slate-900">
+            <div className="px-8 py-6 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm">
               <div className="space-y-6">
                 <div>
                   <label className="text-base font-semibold text-slate-800 dark:text-slate-200 block mb-3 flex items-center gap-2">
@@ -390,7 +409,7 @@ return (
                     value={formData.name}
                     onChange={(e) => setFormData({...formData, name: e.target.value})}
                     placeholder="e.g., Work, Personal, Ideas..."
-                    className="w-full h-12 text-base border-2 border-slate-200 dark:border-slate-700 rounded-xl focus:border-purple-500 focus:ring-purple-500 bg-slate-50 dark:bg-slate-800 dark:text-white transition-all duration-300"
+                    className="w-full h-12 text-base border-2 border-slate-200 dark:border-slate-700 rounded-xl focus:border-purple-500 focus:ring-purple-500 bg-white/50 dark:bg-slate-800/50 dark:text-white transition-all duration-300"
                   />
                 </div>
 
@@ -402,7 +421,7 @@ return (
                     value={formData.description}
                     onChange={(e) => setFormData({...formData, description: e.target.value})}
                     placeholder="Brief description of this category..."
-                    className="w-full h-24 text-base border-2 border-slate-200 dark:border-slate-700 rounded-xl focus:border-purple-500 focus:ring-purple-500 bg-slate-50 dark:bg-slate-800 dark:text-white resize-none transition-all duration-300"
+                    className="w-full h-24 text-base border-2 border-slate-200 dark:border-slate-700 rounded-xl focus:border-purple-500 focus:ring-purple-500 bg-white/50 dark:bg-slate-800/50 dark:text-white resize-none transition-all duration-300"
                   />
                 </div>
 
@@ -415,10 +434,10 @@ return (
                       value={formData.color}
                       onValueChange={(value: string) => setFormData({...formData, color: value})}
                     >
-                      <SelectTrigger className="h-12 border-2 border-slate-200 dark:border-slate-700 rounded-xl focus:border-purple-500 bg-slate-50 dark:bg-slate-800 dark:text-white text-base">
+                      <SelectTrigger className="h-12 border-2 border-slate-200 dark:border-slate-700 rounded-xl focus:border-purple-500 bg-white/50 dark:bg-slate-800/50 dark:text-white text-base">
                         <SelectValue placeholder="Select color..." />
                       </SelectTrigger>
-                      <SelectContent className="rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-xl">
+                      <SelectContent className="rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white/90 dark:bg-slate-800/90 backdrop-blur-md shadow-xl">
                         {colorOptions.map((color) => (
                           <SelectItem key={color.value} value={color.value} className="py-3 px-4 rounded-lg">
                             <div className="flex items-center gap-3">
@@ -439,10 +458,10 @@ return (
                       value={formData.icon}
                       onValueChange={(value: string) => setFormData({...formData, icon: value})}
                     >
-                      <SelectTrigger className="h-12 border-2 border-slate-200 dark:border-slate-700 rounded-xl focus:border-purple-500 bg-slate-50 dark:bg-slate-800 dark:text-white text-base">
+                      <SelectTrigger className="h-12 border-2 border-slate-200 dark:border-slate-700 rounded-xl focus:border-purple-500 bg-white/50 dark:bg-slate-800/50 dark:text-white text-base">
                         <SelectValue placeholder="Select icon..." />
                       </SelectTrigger>
-                      <SelectContent className="rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-xl max-h-72">
+                      <SelectContent className="rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white/90 dark:bg-slate-800/90 backdrop-blur-md shadow-xl max-h-72">
                         {iconOptions.map((iconName) => {
                           const IconComponent = iconComponents[iconName];
                           return (
@@ -460,7 +479,7 @@ return (
                 </div>
 
                 {/* Preview */}
-                <div className="bg-gradient-to-r from-slate-50 to-blue-50 dark:bg-slate-800 rounded-2xl p-4 border border-slate-200 dark:border-slate-700">
+                <div className="bg-gradient-to-r from-slate-50 to-purple-50 dark:from-slate-800 dark:to-slate-700 rounded-2xl p-4 border border-slate-200 dark:border-slate-600">
                   <label className="text-base font-semibold text-slate-800 dark:text-slate-200 block mb-3">
                     Preview
                   </label>
@@ -483,7 +502,7 @@ return (
                   </div>
                 </div>
 
-                <div className="flex gap-4 pt-6 border-t border-slate-100 dark:border-slate-800">
+                <div className="flex gap-4 pt-6 border-t border-slate-200 dark:border-slate-700">
                   <Button
                     variant="outline"
                     onClick={() => setShowDialog(false)}
@@ -497,7 +516,10 @@ return (
                     className="flex-1 h-12 text-base font-semibold bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl rounded-xl transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isSaving ? (
-                      <>⏳ Saving...</>
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Saving...
+                      </>
                     ) : editingCategory ? (
                       <>✅ Update Category</>
                     ) : (
@@ -512,3 +534,4 @@ return (
       </div>
     </div>
   );
+}
