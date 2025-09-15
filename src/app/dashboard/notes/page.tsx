@@ -1,12 +1,8 @@
 'use client';
 
 import React, { useEffect, useMemo, useState } from 'react';
-
 import { useRouter } from 'next/navigation';
-// Add this import
 import { useSearchParams } from 'next/navigation';
-
-// Your other imports...
 import { deleteNote, getNotes, pinNote } from '@/actions/notes';
 import { getNoteCategories } from '@/actions/notes/categories';
 import NotesLayout from '@/components/layouts/NotesLayout';
@@ -18,14 +14,11 @@ import StatsOverview from '@/components/notes/StatsOverview';
 import { Button } from '@/components/ui/button';
 import { Breadcrumb } from '@/components/ui/reuse/Breadcrumb';
 import { Category, Note } from '@/types/notes';
-
 import { AnimatePresence, motion } from 'framer-motion';
-import { Edit3, Plus } from 'lucide-react';
-import { Notebook } from 'lucide-react';
+import { Edit3, Plus, Notebook, Sparkles } from 'lucide-react';
 
 export default function NotesPage() {
     const router = useRouter();
-    // Add this line to get search params
     const searchParams = useSearchParams();
 
     const breadcrumbItems = [
@@ -40,15 +33,10 @@ export default function NotesPage() {
     const [selectedCategory, setSelectedCategory] = useState('all');
     const [isLoading, setIsLoading] = useState(true);
     const [sortBy, setSortBy] = useState('updated');
-
-    // Add this state to track new note IDs
     const [newNoteIds, setNewNoteIds] = useState<string[]>([]);
-
-    // Add these states for the sheet
     const [selectedNote, setSelectedNote] = useState<Note | null>(null);
     const [isSheetOpen, setIsSheetOpen] = useState(false);
 
-    // Check URL for note ID to open sheet
     useEffect(() => {
         const noteId = searchParams.get('id');
         if (noteId && notes.length > 0) {
@@ -68,25 +56,17 @@ export default function NotesPage() {
         filterAndSortNotes();
     }, [notes, searchTerm, selectedCategory, sortBy]);
 
-    // Function to add a note to the "new" list
     const addNewNoteHighlight = (noteId: string) => {
         setNewNoteIds((prev) => [...prev, noteId]);
-
-        // Remove the highlight after 5 seconds
         setTimeout(() => {
             setNewNoteIds((prev) => prev.filter((id) => id !== noteId));
         }, 5000);
     };
 
-    // Check if we're coming from a create operation
     useEffect(() => {
-        // Check URL parameters for newly created note
         const newNoteId = searchParams.get('newNote');
-
         if (newNoteId) {
             addNewNoteHighlight(newNoteId);
-
-            // Clean up the URL
             const newUrl = window.location.pathname;
             window.history.replaceState({}, '', newUrl);
         }
@@ -100,13 +80,7 @@ export default function NotesPage() {
             if (notesResponse.error) throw new Error(notesResponse.error);
             if (categoriesResponse.error) throw new Error(categoriesResponse.error);
 
-            // const processedNotes = (notesResponse.notes || []).map((note) => ({
-            //     ...note,
-            //     category: typeof note.category === 'object' ? note.category.name : note.category,
-            //     color: note.color || 'slate'
-            // }));
             const processedNotes = (notesResponse.notes || []).map((note) => {
-                // Extract category name if it's an object, otherwise use as is
                 const categoryName =
                     typeof note.category === 'object' && note.category !== null
                         ? (note.category as Category).name
@@ -114,7 +88,7 @@ export default function NotesPage() {
 
                 return {
                     ...note,
-                    category: categoryName, // This ensures category is always string | undefined
+                    category: categoryName,
                     color: note.color || 'slate'
                 };
             });
@@ -130,7 +104,6 @@ export default function NotesPage() {
     const filterAndSortNotes = () => {
         let filtered = [...notes];
 
-        // Filter by search term
         if (searchTerm) {
             filtered = filtered.filter(
                 (note) =>
@@ -140,12 +113,10 @@ export default function NotesPage() {
             );
         }
 
-        // Filter by category
         if (selectedCategory !== 'all') {
             filtered = filtered.filter((note) => note.category === selectedCategory);
         }
 
-        // Sort notes
         filtered.sort((a, b) => {
             if (a.is_pinned && !b.is_pinned) return -1;
             if (!a.is_pinned && b.is_pinned) return 1;
@@ -164,31 +135,24 @@ export default function NotesPage() {
         setFilteredNotes(filtered);
     };
 
-    // In your note creation function - update this function
     const handleCreateNote = async () => {
-        // Navigate to create page
         router.push('/dashboard/notes/create');
     };
 
     const handlePinNote = async (noteId: string, isPinned: boolean) => {
         try {
-            // Optimistically update the UI
             setNotes((prevNotes) =>
                 prevNotes.map((note) => (note.id === noteId ? { ...note, is_pinned: isPinned } : note))
             );
 
-            // Call the server action
             const { success, error } = await pinNote(noteId, isPinned);
 
             if (error) {
-                // Revert on error
                 setNotes((prevNotes) =>
                     prevNotes.map((note) => (note.id === noteId ? { ...note, is_pinned: !isPinned } : note))
                 );
                 throw new Error(error);
             }
-
-            // No need to call loadData() - we've already updated optimistically
         } catch (error) {
             console.error('Error pinning note:', error);
         }
@@ -199,8 +163,6 @@ export default function NotesPage() {
             try {
                 const { success, error } = await deleteNote(noteId);
                 if (error) throw new Error(error);
-
-                // Update local state instead of reloading
                 setNotes((prevNotes) => prevNotes.filter((note) => note.id !== noteId));
             } catch (error) {
                 console.error('Error deleting note:', error);
@@ -211,14 +173,12 @@ export default function NotesPage() {
     const handleCardClick = (note: Note) => {
         setSelectedNote(note);
         setIsSheetOpen(true);
-        // Update URL without navigation
         router.push(`/dashboard/notes?id=${note.id}`, { scroll: false });
     };
 
     const handleSheetOpenChange = (open: boolean) => {
         setIsSheetOpen(open);
         if (!open) {
-            // Clear the URL parameter when sheet closes
             router.push('/dashboard/notes', { scroll: false });
         }
     };
@@ -230,33 +190,41 @@ export default function NotesPage() {
 
     return (
         <NotesLayout>
-            <div className='min-h-screen bg-slate-50'>
+            <div className='min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 dark:from-slate-900 dark:via-slate-800 dark:to-blue-900/20'>
                 <div className='mx-auto max-w-7xl p-4 lg:p-8'>
-                    {/* Header */}
+                    {/* Premium Header */}
                     <div className='mb-8 flex flex-col items-start justify-between gap-4 lg:flex-row lg:items-center'>
-                        <div>
-                            <h1 className='mb-2 flex items-center gap-3 text-3xl font-bold text-slate-500 lg:text-4xl'>
-                                <Notebook className='h-8 w-8 text-slate-600' />
+                        <div className='relative'>
+                            <div className='absolute -inset-4 bg-gradient-to-r from-blue-500/10 to-purple-500/10 blur-2xl'></div>
+                            <h1 className='relative mb-3 flex items-center gap-3 text-3xl font-bold text-slate-800 dark:text-white lg:text-4xl'>
+                                <div className='flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg'>
+                                    <Notebook className='h-6 w-6 text-white' />
+                                </div>
                                 <span>Notes</span>
+                                <Sparkles className='h-5 w-5 text-yellow-400' />
                             </h1>
-                            <p className='text-slate-600'>Capture your thoughts with AI-powered organization</p>
+                            <p className='relative text-slate-600 dark:text-slate-400'>
+                                Capture your thoughts with AI-powered organization
+                            </p>
                         </div>
                         <Button
                             onClick={handleCreateNote}
-                            className='group bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg transition-all duration-300 hover:from-blue-700 hover:to-indigo-700 hover:shadow-xl'>
+                            className='group relative overflow-hidden bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg transition-all duration-300 hover:from-blue-700 hover:to-indigo-700 hover:shadow-xl'>
+                            <div className='absolute inset-0 bg-gradient-to-r from-white/10 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100'></div>
                             <Plus className='mr-2 h-4 w-4 transition-transform duration-200 group-hover:rotate-90' />
                             New Note
                         </Button>
                     </div>
+
                     <Breadcrumb items={breadcrumbItems} />
 
-                    <div className='mt-4'>
+                    {/* Stats Overview */}
+                    <div className='mt-6'>
                         <StatsOverview notes={notes} categories={categories} />
                     </div>
 
-                    {/* Stats Overview */}
                     {/* Search and Filters */}
-                    <div className='mb-8 grid gap-4 lg:grid-cols-4'>
+                    <div className='mb-8 mt-8 grid gap-4 lg:grid-cols-4'>
                         <div className='lg:col-span-2'>
                             <SearchBar searchTerm={searchTerm} onSearchChange={setSearchTerm} />
                         </div>
@@ -269,7 +237,7 @@ export default function NotesPage() {
                         </div>
                         <div>
                             <select
-                                className='w-full rounded-xl border border-slate-200 bg-white/80 px-4 py-2 backdrop-blur-sm transition-all duration-200 focus:border-transparent focus:ring-2 focus:ring-blue-500 focus:outline-none'
+                                className='w-full rounded-xl border border-slate-200 bg-white/80 px-4 py-2.5 backdrop-blur-sm transition-all duration-200 focus:border-transparent focus:ring-2 focus:ring-blue-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800/80 dark:text-white dark:placeholder-slate-400 dark:focus:ring-blue-400'
                                 value={sortBy}
                                 onChange={(e) => setSortBy(e.target.value)}>
                                 <option value='updated'>Recently Updated</option>
@@ -282,27 +250,36 @@ export default function NotesPage() {
                     {/* Notes Grid */}
                     <AnimatePresence mode='wait'>
                         {isLoading ? (
-                            <div className='grid gap-6 md:grid-cols-2 lg:grid-cols-3'>
-                                {Array(6)
+                            <div className='grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'>
+                                {Array(8)
                                     .fill(0)
                                     .map((_, i) => (
-                                        <div key={i} className='animate-pulse rounded-2xl bg-white/80 p-6'>
-                                            <div className='mb-3 h-4 rounded bg-slate-200'></div>
-                                            <div className='mb-2 h-3 rounded bg-slate-200'></div>
-                                            <div className='h-3 w-3/4 rounded bg-slate-200'></div>
-                                        </div>
+                                        <motion.div
+                                            key={i}
+                                            initial={{ opacity: 0, scale: 0.9 }}
+                                            animate={{ opacity: 1, scale: 1 }}
+                                            className='animate-pulse rounded-2xl bg-white/80 p-6 backdrop-blur-sm dark:bg-slate-800/80'
+                                        >
+                                            <div className='mb-4 h-6 rounded-lg bg-slate-200 dark:bg-slate-700'></div>
+                                            <div className='mb-3 h-4 rounded bg-slate-200 dark:bg-slate-700'></div>
+                                            <div className='h-4 w-3/4 rounded bg-slate-200 dark:bg-slate-700'></div>
+                                        </motion.div>
                                     ))}
                             </div>
                         ) : filteredNotes.length === 0 ? (
                             <motion.div
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                className='py-16 text-center'>
-                                <div className='mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-blue-100 to-indigo-100'>
-                                    <Edit3 className='h-12 w-12 text-blue-600' />
+                                transition={{ duration: 0.6 }}
+                                className='py-20 text-center'
+                            >
+                                <div className='mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30'>
+                                    <Edit3 className='h-12 w-12 text-blue-600 dark:text-blue-400' />
                                 </div>
-                                <h3 className='mb-2 text-xl font-semibold text-slate-900'>No notes found</h3>
-                                <p className='mb-6 text-slate-600'>
+                                <h3 className='mb-3 text-xl font-semibold text-slate-900 dark:text-white'>
+                                    No notes found
+                                </h3>
+                                <p className='mb-6 text-slate-600 dark:text-slate-400'>
                                     {searchTerm || selectedCategory !== 'all'
                                         ? 'Try adjusting your search or filters'
                                         : 'Start writing your first note with AI assistance'}
@@ -310,33 +287,46 @@ export default function NotesPage() {
                                 {!searchTerm && selectedCategory === 'all' && (
                                     <Button
                                         onClick={handleCreateNote}
-                                        className='bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700'>
+                                        className='bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700'
+                                    >
                                         <Plus className='mr-2 h-4 w-4' />
                                         Create Your First Note
                                     </Button>
                                 )}
                             </motion.div>
                         ) : (
-                            <div className='grid gap-6 md:grid-cols-2 lg:grid-cols-3'>
-                                {filteredNotes.map((note) => (
-                                    <NoteCard
+                            <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                transition={{ duration: 0.5 }}
+                                className='grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
+                            >
+                                {filteredNotes.map((note, index) => (
+                                    <motion.div
                                         key={note.id}
-                                        note={{
-                                            ...note,
-                                            word_count: note.content.split(/\s+/).length
-                                        }}
-                                        onEdit={handleEditNote}
-                                        onPin={handlePinNote}
-                                        onDelete={handleDeleteNote}
-                                        isNew={newNoteIds.includes(note.id)} // Pass the isNew prop
-                                        isSelected={selectedNote?.id === note.id} // Highlight selected note
-                                        onClick={() => handleCardClick(note)} // Add onClick handler
-                                    />
+                                        initial={{ opacity: 0, y: 20 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ duration: 0.4, delay: index * 0.05 }}
+                                    >
+                                        <NoteCard
+                                            note={{
+                                                ...note,
+                                                word_count: note.content.split(/\s+/).length
+                                            }}
+                                            onEdit={handleEditNote}
+                                            onPin={handlePinNote}
+                                            onDelete={handleDeleteNote}
+                                            isNew={newNoteIds.includes(note.id)}
+                                            isSelected={selectedNote?.id === note.id}
+                                            onClick={() => handleCardClick(note)}
+                                        />
+                                    </motion.div>
                                 ))}
-                            </div>
+                            </motion.div>
                         )}
                     </AnimatePresence>
-                    {/* Add NoteDetails component */}
+
+                    {/* Note Details Sheet */}
                     <NoteDetails
                         note={selectedNote}
                         open={isSheetOpen}

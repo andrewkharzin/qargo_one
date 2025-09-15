@@ -1,3 +1,4 @@
+// app/dashboard/notes/create/page.tsx
 import { getNoteCategories } from '@/actions/notes/categories';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import { Category } from '@/types/notes';

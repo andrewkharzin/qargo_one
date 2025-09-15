@@ -1,232 +1,241 @@
 // components/layouts/Sidebar/Sidebar.tsx
 'use client';
 
-import { usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { PenTool, Sparkles, ChevronDown, ChevronRight } from 'lucide-react';
+import { usePathname } from 'next/navigation';
+
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import {
-  Sidebar as UISidebar,
-  SidebarContent,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarHeader,
-  SidebarFooter,
-  useSidebar,
-  SidebarMenuSub,
-  SidebarMenuSubItem,
-  SidebarMenuSubButton,
-  SidebarMenuBadge,
-} from "@/components/ui/sidebar";
-import {
-  NavigationItem,
-  NavigationLink,
-  NavigationMenu,
-  isNavigationMenu,
-  isNavigationLink
-} from './types';
-import { navigationItems, managementItems } from './NavigationItems';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+    SidebarContent,
+    SidebarFooter,
+    SidebarGroup,
+    SidebarGroupContent,
+    SidebarGroupLabel,
+    SidebarHeader,
+    SidebarMenu,
+    SidebarMenuBadge,
+    SidebarMenuButton,
+    SidebarMenuItem,
+    SidebarMenuSub,
+    SidebarMenuSubButton,
+    SidebarMenuSubItem,
+    Sidebar as UISidebar,
+    useSidebar
+} from '@/components/ui/sidebar';
 import { cn } from '@/lib/utils';
 
+import { managementItems, navigationItems } from './NavigationItems';
+import { NavigationItem, NavigationLink, NavigationMenu, isNavigationLink, isNavigationMenu } from './types';
+import { ChevronDown, ChevronRight, Crown, PenTool, Sparkles, Zap } from 'lucide-react';
+
+
+
+// components/layouts/Sidebar/Sidebar.tsx
+
 export default function Sidebar() {
-  const pathname = usePathname();
-  const { state } = useSidebar();
+    const pathname = usePathname();
+    const { state } = useSidebar();
 
-  const isActive = (url: string): boolean => {
-    if (url === pathname) return true;
-    if (pathname.startsWith(url + '/')) return true;
-    return false;
-  };
+    const isActive = (url: string): boolean => {
+        if (url === pathname) return true;
+        if (pathname.startsWith(url + '/')) return true;
+        return false;
+    };
 
-  const renderNavigationItem = (item: NavigationItem) => {
-    if (isNavigationLink(item)) {
-      return renderLinkItem(item);
-    }
-    if (isNavigationMenu(item)) {
-      return renderMenu(item);
-    }
-    return null;
-  };
+    const renderNavigationItem = (item: NavigationItem) => {
+        if (isNavigationLink(item)) {
+            return renderLinkItem(item);
+        }
+        if (isNavigationMenu(item)) {
+            return renderMenu(item);
+        }
+        return null;
+    };
 
-  const renderLinkItem = (item: NavigationLink) => {
-    const active = isActive(item.url);
+    const renderLinkItem = (item: NavigationLink) => {
+        const active = isActive(item.url);
 
-    return (
-      <SidebarMenuItem key={item.title}>
-        <SidebarMenuButton
-          asChild
-          isActive={active}
-          className={cn(
-            "hover:bg-blue-50/80 hover:text-blue-700 transition-all duration-300 rounded-lg mb-1 group",
-            active && 'bg-blue-50/80 text-blue-700 shadow-sm'
-          )}
-        >
-          <Link href={item.url} className="flex items-center gap-3 px-4 py-3">
-            <item.icon className="w-4 h-4 group-hover:scale-110 transition-transform duration-200" />
-            {state !== 'collapsed' && (
-              <div className="flex items-center gap-2">
-                <span className="font-medium">{item.title}</span>
-                {item.isParallel && (
-                  <span className="text-xs text-blue-500 bg-blue-100 px-2 py-0.5 rounded-full">
-                    Parallel
-                  </span>
-                )}
-              </div>
-            )}
-          </Link>
-        </SidebarMenuButton>
-      </SidebarMenuItem>
-    );
-  };
-
-  const renderMenu = (menu: NavigationMenu) => {
-    const isAnySubItemActive = menu.items.some(item => isActive(item.url));
-    const isExpandedByDefault = isAnySubItemActive;
-
-    return (
-      <Collapsible key={menu.title} defaultOpen={isExpandedByDefault} className="group/collapsible">
-        <SidebarMenuItem>
-          <CollapsibleTrigger asChild>
-            <SidebarMenuButton
-              isActive={isAnySubItemActive}
-              className={cn(
-                "hover:bg-blue-50/80 hover:text-blue-700 transition-all duration-300 rounded-lg mb-2 group",
-                isAnySubItemActive && 'bg-blue-50/80 text-blue-700 shadow-sm'
-              )}
-            >
-              <menu.icon className="w-4 h-4 group-hover:scale-110 transition-transform duration-200" />
-              {state !== 'collapsed' && (
-                <div className="flex items-center justify-between w-full">
-                  <span className="font-medium">{menu.title}</span>
-                  <ChevronDown className="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-180" />
-                </div>
-              )}
-            </SidebarMenuButton>
-          </CollapsibleTrigger>
-          <CollapsibleContent>
-            <SidebarMenuSub className="mt-1">
-              {menu.items.map((subItem) => (
-                <SidebarMenuSubItem key={subItem.title} className="mb-1 last:mb-0">
-                  <SidebarMenuSubButton
+        return (
+            <SidebarMenuItem key={item.title}>
+                <SidebarMenuButton
                     asChild
-                    isActive={isActive(subItem.url)}
-                    className="group/subitem transition-all duration-200 hover:bg-slate-50 rounded-lg"
-                  >
-                    <Link href={subItem.url} className="flex items-start gap-3 px-4 py-3">
-                      <subItem.icon className="w-4 h-4 text-slate-400 group-hover/subitem:text-slate-700 mt-0.5 flex-shrink-0" />
-                      {state !== 'collapsed' && (
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="font-medium text-sm text-slate-800 group-hover/subitem:text-slate-900">
-                              {subItem.title}
-                            </span>
-                            {subItem.badge && (
-                              <SidebarMenuBadge className="text-xs px-1.5 py-0.5">
-                                {subItem.badge}
-                              </SidebarMenuBadge>
-                            )}
-                          </div>
-                          {subItem.description && (
-                            <p className="text-xs text-slate-500 line-clamp-2 group-hover/subitem:text-slate-600 leading-relaxed">
-                              {subItem.description}
-                            </p>
-                          )}
-                        </div>
-                      )}
+                    isActive={active}
+                    className={cn(
+                        'group mb-1 rounded-lg transition-all duration-300',
+                        'hover:bg-blue-500/10 hover:text-blue-400',
+                        active &&
+                            'border-l-2 border-blue-400 bg-gradient-to-r from-blue-500/20 to-indigo-500/20 text-blue-300',
+                        'dark:hover:bg-blue-500/10 dark:hover:text-blue-300'
+                    )}>
+                    <Link href={item.url} className='flex items-center gap-3 px-4 py-3'>
+                        <item.icon className='h-4 w-4 transition-transform duration-200 group-hover:scale-110' />
+                        {state !== 'collapsed' && (
+                            <div className='flex items-center gap-2'>
+                                <span className='font-medium'>{item.title}</span>
+                                {item.isParallel && (
+                                    <span className='rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 px-2 py-0.5 text-xs text-white'>
+                                        Parallel
+                                    </span>
+                                )}
+                            </div>
+                        )}
                     </Link>
-                  </SidebarMenuSubButton>
-                </SidebarMenuSubItem>
-              ))}
-            </SidebarMenuSub>
-          </CollapsibleContent>
-        </SidebarMenuItem>
-      </Collapsible>
-    );
-  };
+                </SidebarMenuButton>
+            </SidebarMenuItem>
+        );
+    };
 
-  const renderNavigationGroup = (items: NavigationItem[], groupName: string) => {
-    const groupItems = items.filter(item => item.group === groupName);
+    const renderMenu = (menu: NavigationMenu) => {
+        const isAnySubItemActive = menu.items.some((item) => isActive(item.url));
+        const isExpandedByDefault = isAnySubItemActive;
 
-    if (groupItems.length === 0) return null;
+        return (
+            <Collapsible key={menu.title} defaultOpen={isExpandedByDefault} className='group/collapsible'>
+                <SidebarMenuItem>
+                    <CollapsibleTrigger asChild>
+                        <SidebarMenuButton
+                            isActive={isAnySubItemActive}
+                            className={cn(
+                                'group mb-2 rounded-lg transition-all duration-300',
+                                'hover:bg-blue-500/10 hover:text-blue-400',
+                                isAnySubItemActive &&
+                                    'border-l-2 border-blue-400 bg-gradient-to-r from-blue-500/20 to-indigo-500/20 text-blue-300',
+                                'dark:hover:bg-blue-500/10 dark:hover:text-blue-300'
+                            )}>
+                            <menu.icon className='h-4 w-4 transition-transform duration-200 group-hover:scale-110' />
+                            {state !== 'collapsed' && (
+                                <div className='flex w-full items-center justify-between'>
+                                    <span className='font-medium'>{menu.title}</span>
+                                    <ChevronDown className='ml-auto transition-transform group-data-[state=open]/collapsible:rotate-180' />
+                                </div>
+                            )}
+                        </SidebarMenuButton>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                        <div className='mt-1 space-y-2'>
+                            {menu.items.map((subItem) => (
+                                <div
+                                    key={subItem.title}
+                                    className='group/subitem rounded-xl transition-all duration-300 hover:bg-gradient-to-r hover:from-blue-500/15 hover:to-purple-500/15 hover:shadow-lg'>
+                                    <Link href={subItem.url} className='flex items-start gap-3 px-3 py-3'>
+                                        <div className='relative'>
+                                            <div className='absolute -inset-1 rounded-lg bg-gradient-to-r from-blue-500 to-purple-500 opacity-0 blur transition-opacity duration-300 group-hover/subitem:opacity-30'></div>
+                                            <subItem.icon className='relative mt-0.5 h-4 w-4 flex-shrink-0 text-slate-400 transition-all duration-300 group-hover/subitem:text-white' />
+                                        </div>
+                                        {state !== 'collapsed' && (
+                                            <div className='min-w-0 flex-1'>
+                                                <div className='mb-1.5 flex items-center gap-2'>
+                                                    <span className='text-sm font-semibold text-slate-200 transition-colors duration-300 group-hover/subitem:text-white'>
+                                                        {subItem.title}
+                                                    </span>
+                                                    {subItem.badge && (
+                                                        <span className='transform rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 px-2 py-1 text-xs font-medium text-white shadow-lg transition-transform duration-300 group-hover/subitem:scale-105'>
+                                                            {subItem.badge}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                {subItem.description && (
+                                                    <div className='mt-2'>
+                                                        <p className='text-xs leading-relaxed text-slate-400 transition-colors duration-300 group-hover/subitem:text-slate-300'>
+                                                            {subItem.description}
+                                                        </p>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+                                    </Link>
+                                </div>
+                            ))}
+                        </div>
+                    </CollapsibleContent>
+                </SidebarMenuItem>
+            </Collapsible>
+        );
+    };
+
+    const renderNavigationGroup = (items: NavigationItem[], groupName: string) => {
+        const groupItems = items.filter((item) => item.group === groupName);
+
+        if (groupItems.length === 0) return null;
+
+        return (
+            <SidebarGroup key={groupName}>
+                <SidebarGroupLabel className='px-3 py-3 text-xs font-semibold tracking-wider text-slate-400/70 uppercase'>
+                    {groupName}
+                </SidebarGroupLabel>
+                <SidebarGroupContent>
+                    <SidebarMenu>{groupItems.map(renderNavigationItem)}</SidebarMenu>
+                </SidebarGroupContent>
+            </SidebarGroup>
+        );
+    };
+
+    // Group items by their group
+    const allItems = [...navigationItems, ...managementItems];
+    const groups = Array.from(new Set(allItems.map((item) => item.group)));
 
     return (
-      <SidebarGroup key={groupName}>
-        <SidebarGroupLabel className="text-xs font-semibold text-slate-500 uppercase tracking-wider px-3 py-3">
-          {groupName}
-        </SidebarGroupLabel>
-        <SidebarGroupContent>
-          <SidebarMenu>
-            {groupItems.map(renderNavigationItem)}
-          </SidebarMenu>
-        </SidebarGroupContent>
-      </SidebarGroup>
-    );
-  };
-
-  // Group items by their group
-  const allItems = [...navigationItems, ...managementItems];
-  const groups = Array.from(new Set(allItems.map(item => item.group)));
-
-  return (
-    <UISidebar
-      collapsible="icon"
-      className="border-r border-slate-200/60 bg-white/80 backdrop-blur-xl"
-    >
-      <SidebarHeader className="border-b border-slate-200/60 p-6">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-gradient-to-br from-blue-600 via-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
-            <PenTool className="w-5 h-5 text-white" />
-          </div>
-          {state !== 'collapsed' && (
-            <div>
-              <h2 className="font-bold text-lg text-slate-900">Ultimate Notes</h2>
-              <p className="text-xs text-slate-500 font-medium">Social AI Writing</p>
-            </div>
-          )}
-        </div>
-      </SidebarHeader>
-
-      <SidebarContent className="p-3">
-        {groups.map(groupName => renderNavigationGroup(allItems, groupName))}
-
-        {/* AI Features Section */}
-        {state !== 'collapsed' && (
-          <SidebarGroup key="ai-features">
-            <SidebarGroupLabel className="text-xs font-semibold text-slate-500 uppercase tracking-wider px-3 py-3">
-              AI Features
-            </SidebarGroupLabel>
-            <SidebarGroupContent>
-              <div className="px-4 py-4 mx-3 bg-gradient-to-r from-purple-50 to-blue-50 rounded-xl border border-purple-100">
-                <div className="flex items-center gap-2 mb-2">
-                  <Sparkles className="w-4 h-4 text-purple-600" />
-                  <span className="font-semibold text-purple-900 text-sm">AI Assistant</span>
+        <UISidebar
+            collapsible='icon'
+            className='bg-gradient-to-b from-slate-900 to-slate-800 shadow-2xl backdrop-blur-xl'>
+            <SidebarHeader className='border-b border-slate-700/50 p-6'>
+                <div className='flex items-center gap-3'>
+                    <div className='flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-600 shadow-lg'>
+                        <PenTool className='h-5 w-5 text-white' />
+                    </div>
+                    {state !== 'collapsed' && (
+                        <div>
+                            <h2 className='text-lg font-bold text-white'>Ultimate Notes</h2>
+                            <p className='text-xs font-medium text-slate-400'>Social AI Writing</p>
+                        </div>
+                    )}
                 </div>
-                <p className="text-xs text-purple-700 leading-relaxed">
-                  Auto-generates titles, tags, and FWB messages
-                </p>
-              </div>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        )}
-      </SidebarContent>
+            </SidebarHeader>
 
-      <SidebarFooter className="border-t border-slate-200/60 p-4">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-gradient-to-r from-slate-100 to-slate-200 rounded-full flex items-center justify-center">
-            <span className="text-slate-600 font-semibold text-sm">U</span>
-          </div>
-          {state !== 'collapsed' && (
-            <div className="flex-1 min-w-0">
-              <p className="font-semibold text-slate-900 text-sm truncate">User</p>
-              <p className="text-xs text-slate-500 truncate">Cargo Operations</p>
-            </div>
-          )}
-        </div>
-      </SidebarFooter>
-    </UISidebar>
-  );
+            <SidebarContent className=''>
+                {groups.map((groupName) => renderNavigationGroup(allItems, groupName))}
+
+                {/* Premium AI Features Section */}
+                {state !== 'collapsed' && (
+                    <SidebarGroup key='ai-features'>
+                        <SidebarGroupLabel className='px-3 py-3 text-xs font-semibold tracking-wider text-slate-400/70 uppercase'>
+                            AI Features
+                        </SidebarGroupLabel>
+                        <SidebarGroupContent>
+                            <div className='mx-3 rounded-xl border border-purple-500/20 bg-gradient-to-r from-purple-900/30 to-blue-900/30 px-4 py-4'>
+                                <div className='mb-2 flex items-center gap-2'>
+                                    <div className='rounded-full bg-gradient-to-r from-purple-500 to-fuchsia-500 p-1'>
+                                        <Sparkles className='h-3 w-3 text-white' />
+                                    </div>
+                                    <span className='text-sm font-semibold text-purple-300'>AI Assistant</span>
+                                    <Crown className='ml-auto h-3 w-3 text-yellow-400' />
+                                </div>
+                                <p className='mb-3 text-xs leading-relaxed text-slate-400'>
+                                    Auto-generates titles, tags, and FWB messages
+                                </p>
+                                <div className='flex items-center gap-2 text-xs text-blue-400'>
+                                    <Zap className='h-3 w-3' />
+                                    <span>Premium Feature</span>
+                                </div>
+                            </div>
+                        </SidebarGroupContent>
+                    </SidebarGroup>
+                )}
+            </SidebarContent>
+
+            <SidebarFooter className='border-t border-slate-700/50 p-4'>
+                <div className='flex items-center gap-3'>
+                    <div className='flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-r from-slate-700 to-slate-600 shadow-inner'>
+                        <span className='text-sm font-semibold text-slate-300'>U</span>
+                    </div>
+                    {state !== 'collapsed' && (
+                        <div className='min-w-0 flex-1'>
+                            <p className='truncate text-sm font-semibold text-white'>User</p>
+                            <p className='truncate text-xs text-slate-400'>Cargo Operations</p>
+                        </div>
+                    )}
+                </div>
+            </SidebarFooter>
+        </UISidebar>
+    );
 }

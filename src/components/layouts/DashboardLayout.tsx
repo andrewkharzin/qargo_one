@@ -23,7 +23,7 @@ export default function DashboardLayout({
 
         <main className="flex-1 flex flex-col">
           <Header />
-          <MobileHeader />
+          {/* <MobileHeader /> */}
            {/* Breadcrumb будет рендериться только если есть провайдер */}
            {/* Breadcrumb будет рендериться только если переданы items */}
           {breadcrumbItems.length > 0 && (

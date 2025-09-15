@@ -1,3 +1,4 @@
+// app/dashboard/notes/create/CreateNoteClient.tsx
 'use client';
 
 import { useState } from 'react';
@@ -6,9 +7,9 @@ import { createNote } from '@/actions/notes';
 import NoteEditor from '@/components/notes/NoteEditor';
 import { Button } from '@/components/ui/button';
 import { Category } from '@/types/notes';
-import { ArrowLeft } from 'lucide-react';
-import ErrorBoundary from '@/components/ErrorBoundary';
+import { ArrowLeft, Notebook } from 'lucide-react';
 import { toast } from 'sonner';
+import { Breadcrumb } from '@/components/ui/reuse/Breadcrumb';
 
 interface CreateNoteClientProps {
     categories: Category[];
@@ -18,6 +19,12 @@ export default function CreateNoteClient({ categories }: CreateNoteClientProps) 
     const router = useRouter();
     const [isSaving, setIsSaving] = useState(false);
     const [debugInfo, setDebugInfo] = useState<string[]>([]);
+
+    const breadcrumbItems = [
+        { label: 'Dashboard', href: '/dashboard' },
+        { label: 'Notes', href: '/dashboard/notes' },
+        { label: 'Create Note', href: '/dashboard/notes/create', isCurrent: true }
+    ];
 
     const addDebug = (message: string) => {
         console.log(message);
@@ -62,7 +69,7 @@ export default function CreateNoteClient({ categories }: CreateNoteClientProps) 
                     },
                 });
 
-                // Ждем немного перед редиректом, чтобы пользователь увидел toast
+                // Wait a bit before redirecting so user can see the toast
                 setTimeout(() => {
                     router.push(`/dashboard/notes?newNote=${result.note.id}`);
                     router.refresh();
@@ -92,20 +99,28 @@ export default function CreateNoteClient({ categories }: CreateNoteClientProps) 
     };
 
     return (
-        <div className='min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20'>
+        <div className='min-h-screen bg-background'>
             <div className='mx-auto max-w-4xl p-4 lg:p-8'>
-                <div className='mb-6 flex items-center gap-4'>
-                    <Button variant='outline' size='icon' onClick={handleCancel} className='hover:bg-slate-100'>
-                        <ArrowLeft className='h-4 w-4' />
-                    </Button>
-                    <h1 className='text-2xl font-bold text-slate-900'>Create New Note</h1>
+                {/* Header with Breadcrumbs */}
+                <div className='mb-6 flex flex-col gap-4'>
+                    <div className='flex items-center gap-4'>
+                        <Button variant='outline' size='icon' onClick={handleCancel} className='hover:bg-accent'>
+                            <ArrowLeft className='h-4 w-4' />
+                        </Button>
+                        <div className='flex items-center gap-3'>
+                            <Notebook className='h-8 w-8 text-muted-foreground' />
+                            <h1 className='text-3xl font-bold text-foreground'>Create New Note</h1>
+                        </div>
+                    </div>
+
+                    <Breadcrumb items={breadcrumbItems} />
                 </div>
 
                 {/* Debug panel - will show in browser */}
                 {debugInfo.length > 0 && (
-                    <div className='mb-4 rounded-lg bg-gray-100 p-4'>
-                        <h3 className='mb-2 font-bold'>Debug Info:</h3>
-                        <div className='max-h-32 space-y-1 overflow-y-auto text-xs'>
+                    <div className='mb-4 rounded-lg bg-muted p-4'>
+                        <h3 className='mb-2 font-bold text-foreground'>Debug Info:</h3>
+                        <div className='max-h-32 space-y-1 overflow-y-auto text-xs text-muted-foreground'>
                             {debugInfo.map((info, index) => (
                                 <div key={index}>{info}</div>
                             ))}
@@ -113,7 +128,12 @@ export default function CreateNoteClient({ categories }: CreateNoteClientProps) 
                     </div>
                 )}
 
-                <NoteEditor categories={categories} onSave={handleSave} onCancel={handleCancel} isSaving={isSaving} />
+                <NoteEditor
+                    categories={categories}
+                    onSave={handleSave}
+                    onCancel={handleCancel}
+                    isSaving={isSaving}
+                />
             </div>
         </div>
     );

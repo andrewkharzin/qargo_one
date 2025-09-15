@@ -314,3 +314,12 @@ export type NoteType =
   | 'compliance'
   | 'audit'
   | 'task';
+
+  // Add this to your existing types
+export interface Bookmark {
+  id: string;
+  note_id: string;
+  created_by: string;
+  created_date: string;
+  note?: Note;
+}

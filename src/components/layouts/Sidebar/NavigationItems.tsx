@@ -15,6 +15,8 @@ import {
   Grid,
   Tag,
   Calendar,
+  BookmarkCheck,
+  LayoutTemplate
 } from "lucide-react";
 import { NavigationItem, NavigationLink, NavigationMenu } from './types';
 
@@ -39,50 +41,56 @@ export const navigationItems: NavigationItem[] = [
         icon: Tag,
         description: "Organize by categories"
       },
+       {
+        title: "Bookmarks",
+        url: "/dashboard/notes/bookmarks",
+        icon: BookmarkCheck,
+        description: "Bookmarked notes"
+      },
       {
         title: "Note types",
         url: "/dashboard/notes/note-types",
-        icon: List,
+        icon: LayoutTemplate,
         description: "Grid view of note types",
         badge: "new"
       }
     ]
   },
-  {
-    type: 'link',
-    title: "AI Generator",
-    url: "/dashboard/ai-generator",
-    icon: Sparkles,
-    group: "Core Features"
-  },
-  {
-    type: 'link',
-    title: "Projects",
-    url: "/dashboard/projects",
-    icon: FolderOpen,
-    group: "Core Features"
-  },
-  {
-    type: 'menu',
-    title: "Content",
-    icon: Bookmark,
-    group: "Core Features",
-    items: [
-      {
-        title: "Web Research",
-        url: "/dashboard/web-research",
-        icon: Globe,
-        description: "Research and save content"
-      },
-      {
-        title: "Bookmarks",
-        url: "/dashboard/bookmarks",
-        icon: Bookmark,
-        description: "Saved bookmarks",
-        badge: "8"
-      }
-    ]
-  },
+//   {
+//     type: 'link',
+//     title: "AI Generator",
+//     url: "/dashboard/ai-generator",
+//     icon: Sparkles,
+//     group: "Core Features"
+//   },
+//   {
+//     type: 'link',
+//     title: "Projects",
+//     url: "/dashboard/projects",
+//     icon: FolderOpen,
+//     group: "Core Features"
+//   },
+//   {
+//     type: 'menu',
+//     title: "Content",
+//     icon: Bookmark,
+//     group: "Core Features",
+//     items: [
+//       {
+//         title: "Web Research",
+//         url: "/dashboard/web-research",
+//         icon: Globe,
+//         description: "Research and save content"
+//       },
+//       {
+//         title: "Bookmarks",
+//         url: "/dashboard/bookmarks",
+//         icon: Bookmark,
+//         description: "Saved bookmarks",
+//         badge: "8"
+//       }
+//     ]
+//   },
   {
     type: 'link',
     title: "Team",

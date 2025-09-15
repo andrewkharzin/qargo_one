@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -20,7 +20,10 @@ import {
   Coffee,
   Lightbulb,
   Cpu,
-  LucideIcon
+  LucideIcon,
+  Home,
+  Folder,
+  ArrowLeft
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -31,7 +34,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-
+import { Breadcrumb } from '@/components/ui/reuse/Breadcrumb';
 // Import your server actions
 import { getNoteCategories, createCategory, updateCategory, deleteCategory } from "@/actions/notes/categories";
 import { getNotes } from "@/actions/notes";
@@ -63,6 +66,7 @@ interface ColorOption {
   value: string;
   label: string;
   class: string;
+  darkClass: string;
 }
 
 interface CategoryFormData {
@@ -73,12 +77,12 @@ interface CategoryFormData {
 }
 
 const colorOptions: ColorOption[] = [
-  { value: "blue", label: "Blue", class: "bg-blue-500" },
-  { value: "purple", label: "Purple", class: "bg-purple-500" },
-  { value: "green", label: "Green", class: "bg-green-500" },
-  { value: "yellow", label: "Yellow", class: "bg-yellow-500" },
-  { value: "pink", label: "Pink", class: "bg-pink-500" },
-  { value: "gray", label: "Gray", class: "bg-gray-500" }
+  { value: "blue", label: "Blue", class: "bg-blue-500", darkClass: "bg-blue-600" },
+  { value: "purple", label: "Purple", class: "bg-purple-500", darkClass: "bg-purple-600" },
+  { value: "green", label: "Green", class: "bg-green-500", darkClass: "bg-green-600" },
+  { value: "yellow", label: "Yellow", class: "bg-yellow-500", darkClass: "bg-yellow-600" },
+  { value: "pink", label: "Pink", class: "bg-pink-500", darkClass: "bg-pink-600" },
+  { value: "gray", label: "Gray", class: "bg-gray-500", darkClass: "bg-gray-600" }
 ];
 
 const iconOptions: string[] = [
@@ -90,6 +94,8 @@ const iconComponents: Record<string, LucideIcon> = {
   FolderOpen, FileText, BookOpen, Briefcase, Heart,
   Star, Music, Camera, Coffee, Lightbulb, Cpu
 };
+
+
 
 export default function CategoriesPage() {
   const [categories, setCategories] = useState<NoteCategory[]>([]);
@@ -104,9 +110,20 @@ export default function CategoriesPage() {
   });
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isSaving, setIsSaving] = useState<boolean>(false);
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(false);
 
   useEffect(() => {
     loadData();
+    // Check for dark mode preference
+    const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    setIsDarkMode(isDark);
+
+    // Listen for changes
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const handleChange = (e: MediaQueryListEvent) => setIsDarkMode(e.matches);
+    mediaQuery.addEventListener('change', handleChange);
+
+    return () => mediaQuery.removeEventListener('change', handleChange);
   }, []);
 
   const loadData = async (): Promise<void> => {
@@ -170,7 +187,7 @@ export default function CategoriesPage() {
             name: formData.name,
             color: formData.color,
             description: formData.description,
-            icon: formData.icon // Теперь можно передавать icon
+            icon: formData.icon
         });
         if (error) throw new Error(error);
         } else {
@@ -178,12 +195,12 @@ export default function CategoriesPage() {
             formData.name,
             formData.color,
             formData.description,
-            formData.icon // Теперь можно передавать icon
+            formData.icon
         );
         if (error) throw new Error(error);
         }
       setShowDialog(false);
-      await loadData(); // Reload data after saving
+      await loadData();
     } catch (error) {
       console.error("Error saving category:", error);
       alert(error instanceof Error ? error.message : "Failed to save category");
@@ -204,7 +221,7 @@ export default function CategoriesPage() {
       try {
         const { error } = await deleteCategory(categoryId);
         if (error) throw new Error(error);
-        await loadData(); // Reload data after deletion
+        await loadData();
       } catch (error) {
         console.error("Error deleting category:", error);
         alert(error instanceof Error ? error.message : "Failed to delete category");
@@ -212,17 +229,32 @@ export default function CategoriesPage() {
     }
   };
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20">
+  // Breadcrumb items
+  const breadcrumbItems = [
+    { label: 'Dashboard', href: '/dashboard' },
+    { label: 'Categories', href: '/dashboard/categories', isCurrent: true }
+  ];
+
+return (
+    <div className="min-h-screen  dark:bg-slate-950 dark:text-white transition-colors duration-300">
       <div className="max-w-6xl mx-auto p-4 lg:p-8">
+        {/* Breadcrumb */}
+
         {/* Header */}
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8 gap-4">
-          <div>
-            <h1 className="text-3xl lg:text-4xl font-bold text-slate-900 mb-2">
-              Categories
-            </h1>
-            <p className="text-slate-600">Organize your notes with smart categories</p>
-          </div>
+          <div className='flex items-center gap-4'>
+                        <Button variant='outline' size='icon'  className='hover:bg-accent'>
+                            <ArrowLeft className='h-4 w-4' />
+                        </Button>
+                        <div className='flex items-center gap-3'>
+                            <Folder className='h-8 w-8 text-muted-foreground' />
+                            <div className="flex flex-col">
+
+                            <h1 className='text-xl font-bold text-foreground'>Categories</h1>
+                            <p className="text-slate-400">Organize notes with categories</p>
+                            </div>
+                        </div>
+                    </div>
           <Button
             onClick={handleCreateCategory}
             className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 group"
@@ -231,16 +263,18 @@ export default function CategoriesPage() {
             New Category
           </Button>
         </div>
+         <Breadcrumb items={breadcrumbItems} />
 
         {/* Categories Grid */}
+        <div className="mt-6">
         <AnimatePresence mode="wait">
           {isLoading ? (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {Array(6).fill(0).map((_, i) => (
-                <div key={i} className="bg-white/80 rounded-2xl p-6 animate-pulse">
-                  <div className="h-4 bg-slate-200 rounded mb-3"></div>
-                  <div className="h-3 bg-slate-200 rounded mb-2"></div>
-                  <div className="h-3 bg-slate-200 rounded w-3/4"></div>
+                <div key={i} className="bg-white/80 dark:bg-slate-900 rounded-2xl p-6 animate-pulse">
+                  <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded mb-3"></div>
+                  <div className="h-3 bg-slate-200 dark:bg-slate-700 rounded mb-2"></div>
+                  <div className="h-3 bg-slate-200 dark:bg-slate-700 rounded w-3/4"></div>
                 </div>
               ))}
             </div>
@@ -250,11 +284,11 @@ export default function CategoriesPage() {
               animate={{ opacity: 1, y: 0 }}
               className="text-center py-16"
             >
-              <div className="w-24 h-24 bg-gradient-to-br from-purple-100 to-indigo-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                <FolderOpen className="w-12 h-12 text-purple-600" />
+              <div className="w-24 h-24 bg-gradient-to-br from-purple-100 to-indigo-100 dark:from-slate-800 dark:to-slate-800 rounded-full flex items-center justify-center mx-auto mb-6">
+                <FolderOpen className="w-12 h-12 text-purple-600 dark:text-purple-400" />
               </div>
-              <h3 className="text-xl font-semibold text-slate-900 mb-2">No categories yet</h3>
-              <p className="text-slate-600 mb-6">Create categories to organize your notes better</p>
+              <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-2">No categories yet</h3>
+              <p className="text-slate-600 dark:text-slate-400 mb-6">Create categories to organize your notes better</p>
               <Button
                 onClick={handleCreateCategory}
                 className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
@@ -268,6 +302,7 @@ export default function CategoriesPage() {
               {categories.map((category) => {
                 const IconComponent = iconComponents[category.icon || "FolderOpen"] || FolderOpen;
                 const noteCount = getCategoryStats(category.name);
+                const colorOption = colorOptions.find(c => c.value === category.color) || colorOptions[0];
 
                 return (
                   <motion.div
@@ -276,21 +311,19 @@ export default function CategoriesPage() {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -20 }}
                   >
-                    <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 group">
+                    <Card className="backdrop-blur-sm dark:bg-slate-900  border-b shadow-lg hover:shadow-xl transition-all duration-300 group">
                       <CardHeader className="pb-3">
                         <div className="flex items-start justify-between">
                           <div className="flex items-center gap-3">
-                            <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
-                              colorOptions.find(c => c.value === category.color)?.class || "bg-blue-500"
-                            }`}>
+                            <div className={`w-12 h-12 rounded-xl flex items-center justify-center shadow-lg ${colorOption.class}`}>
                               <IconComponent className="w-6 h-6 text-white" />
                             </div>
                             <div>
-                              <CardTitle className="text-lg font-semibold text-slate-900">
+                              <CardTitle className="text-md font-semibold text-slate-900 dark:text-white">
                                 {category.name}
                               </CardTitle>
                               <div className="flex items-center gap-2 mt-1">
-                                <Badge variant="secondary" className="text-xs">
+                                <Badge variant="secondary" className="text-xs dark:bg-slate-800 dark:text-slate-300">
                                   <FileText className="w-3 h-3 mr-1" />
                                   {noteCount} notes
                                 </Badge>
@@ -302,7 +335,7 @@ export default function CategoriesPage() {
                               variant="ghost"
                               size="icon"
                               onClick={() => handleEditCategory(category)}
-                              className="h-8 w-8 hover:bg-slate-100"
+                              className="h-8 w-8 hover:bg-slate-100 dark:hover:bg-slate-800"
                             >
                               <Edit3 className="w-3 h-3" />
                             </Button>
@@ -310,7 +343,7 @@ export default function CategoriesPage() {
                               variant="ghost"
                               size="icon"
                               onClick={() => handleDeleteCategory(category.id, category.name)}
-                              className="h-8 w-8 hover:bg-red-50 hover:text-red-600"
+                              className="h-8 w-8 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/30 dark:hover:text-red-400"
                             >
                               <Trash2 className="w-3 h-3" />
                             </Button>
@@ -319,7 +352,7 @@ export default function CategoriesPage() {
                       </CardHeader>
                       {category.description && (
                         <CardContent className="pt-0">
-                          <p className="text-sm text-slate-600 leading-relaxed">
+                          <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
                             {category.description}
                           </p>
                         </CardContent>
@@ -331,10 +364,10 @@ export default function CategoriesPage() {
             </div>
           )}
         </AnimatePresence>
-
+        </div>
         {/* Create/Edit Dialog */}
         <Dialog open={showDialog} onOpenChange={setShowDialog}>
-          <DialogContent className="sm:max-w-lg bg-white border-0 shadow-2xl rounded-3xl p-0 overflow-hidden">
+          <DialogContent className="sm:max-w-lg bg-white dark:bg-slate-900 border-0 shadow-2xl rounded-3xl p-0 overflow-hidden">
             <div className="bg-gradient-to-r from-purple-600 to-indigo-600 px-8 py-6">
               <DialogHeader>
                 <DialogTitle className="text-2xl font-bold text-white">
@@ -346,10 +379,10 @@ export default function CategoriesPage() {
               </DialogHeader>
             </div>
 
-            <div className="px-8 py-6 bg-white">
+            <div className="px-8 py-6 bg-white dark:bg-slate-900">
               <div className="space-y-6">
                 <div>
-                  <label className="text-base font-semibold text-slate-800 block mb-3 flex items-center gap-2">
+                  <label className="text-base font-semibold text-slate-800 dark:text-slate-200 block mb-3 flex items-center gap-2">
                     <span>Category Name</span>
                     <span className="text-red-500">*</span>
                   </label>
@@ -357,35 +390,35 @@ export default function CategoriesPage() {
                     value={formData.name}
                     onChange={(e) => setFormData({...formData, name: e.target.value})}
                     placeholder="e.g., Work, Personal, Ideas..."
-                    className="w-full h-12 text-base border-2 border-slate-200 rounded-xl focus:border-purple-500 focus:ring-purple-500 bg-slate-50 transition-all duration-300"
+                    className="w-full h-12 text-base border-2 border-slate-200 dark:border-slate-700 rounded-xl focus:border-purple-500 focus:ring-purple-500 bg-slate-50 dark:bg-slate-800 dark:text-white transition-all duration-300"
                   />
                 </div>
 
                 <div>
-                  <label className="text-base font-semibold text-slate-800 block mb-3">
+                  <label className="text-base font-semibold text-slate-800 dark:text-slate-200 block mb-3">
                     Description
                   </label>
                   <Textarea
                     value={formData.description}
                     onChange={(e) => setFormData({...formData, description: e.target.value})}
                     placeholder="Brief description of this category..."
-                    className="w-full h-24 text-base border-2 border-slate-200 rounded-xl focus:border-purple-500 focus:ring-purple-500 bg-slate-50 resize-none transition-all duration-300"
+                    className="w-full h-24 text-base border-2 border-slate-200 dark:border-slate-700 rounded-xl focus:border-purple-500 focus:ring-purple-500 bg-slate-50 dark:bg-slate-800 dark:text-white resize-none transition-all duration-300"
                   />
                 </div>
 
                 <div className="grid grid-cols-2 gap-6">
                   <div>
-                    <label className="text-base font-semibold text-slate-800 block mb-3">
+                    <label className="text-base font-semibold text-slate-800 dark:text-slate-200 block mb-3">
                       Color Theme
                     </label>
                     <Select
                       value={formData.color}
                       onValueChange={(value: string) => setFormData({...formData, color: value})}
                     >
-                      <SelectTrigger className="h-12 border-2 border-slate-200 rounded-xl focus:border-purple-500 bg-slate-50 text-base">
+                      <SelectTrigger className="h-12 border-2 border-slate-200 dark:border-slate-700 rounded-xl focus:border-purple-500 bg-slate-50 dark:bg-slate-800 dark:text-white text-base">
                         <SelectValue placeholder="Select color..." />
                       </SelectTrigger>
-                      <SelectContent className="rounded-xl border-2 border-slate-200 bg-white shadow-xl">
+                      <SelectContent className="rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-xl">
                         {colorOptions.map((color) => (
                           <SelectItem key={color.value} value={color.value} className="py-3 px-4 rounded-lg">
                             <div className="flex items-center gap-3">
@@ -399,23 +432,23 @@ export default function CategoriesPage() {
                   </div>
 
                   <div>
-                    <label className="text-base font-semibold text-slate-800 block mb-3">
+                    <label className="text-base font-semibold text-slate-800 dark:text-slate-200 block mb-3">
                       Icon
                     </label>
                     <Select
                       value={formData.icon}
                       onValueChange={(value: string) => setFormData({...formData, icon: value})}
                     >
-                      <SelectTrigger className="h-12 border-2 border-slate-200 rounded-xl focus:border-purple-500 bg-slate-50 text-base">
+                      <SelectTrigger className="h-12 border-2 border-slate-200 dark:border-slate-700 rounded-xl focus:border-purple-500 bg-slate-50 dark:bg-slate-800 dark:text-white text-base">
                         <SelectValue placeholder="Select icon..." />
                       </SelectTrigger>
-                      <SelectContent className="rounded-xl border-2 border-slate-200 bg-white shadow-xl max-h-72">
+                      <SelectContent className="rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-xl max-h-72">
                         {iconOptions.map((iconName) => {
                           const IconComponent = iconComponents[iconName];
                           return (
                             <SelectItem key={iconName} value={iconName} className="py-3 px-4 rounded-lg">
                               <div className="flex items-center gap-3">
-                                {IconComponent && <IconComponent className="w-5 h-5 text-slate-600" />}
+                                {IconComponent && <IconComponent className="w-5 h-5 text-slate-600 dark:text-slate-400" />}
                                 <span className="font-medium">{iconName}</span>
                               </div>
                             </SelectItem>
@@ -427,8 +460,8 @@ export default function CategoriesPage() {
                 </div>
 
                 {/* Preview */}
-                <div className="bg-gradient-to-r from-slate-50 to-blue-50 rounded-2xl p-4 border border-slate-200">
-                  <label className="text-base font-semibold text-slate-800 block mb-3">
+                <div className="bg-gradient-to-r from-slate-50 to-blue-50 dark:bg-slate-800 rounded-2xl p-4 border border-slate-200 dark:border-slate-700">
+                  <label className="text-base font-semibold text-slate-800 dark:text-slate-200 block mb-3">
                     Preview
                   </label>
                   <div className="flex items-center gap-3">
@@ -440,21 +473,21 @@ export default function CategoriesPage() {
                       })}
                     </div>
                     <div>
-                      <div className="font-semibold text-slate-900 text-lg">
+                      <div className="font-semibold text-slate-900 dark:text-white text-lg">
                         {formData.name || "Category Name"}
                       </div>
-                      <div className="text-sm text-slate-600">
+                      <div className="text-sm text-slate-600 dark:text-slate-400">
                         {formData.description || "Category description"}
                       </div>
                     </div>
                   </div>
                 </div>
 
-                <div className="flex gap-4 pt-6 border-t border-slate-100">
+                <div className="flex gap-4 pt-6 border-t border-slate-100 dark:border-slate-800">
                   <Button
                     variant="outline"
                     onClick={() => setShowDialog(false)}
-                    className="flex-1 h-12 text-base font-medium border-2 border-slate-200 hover:border-slate-300 hover:bg-slate-50 rounded-xl transition-all duration-300"
+                    className="flex-1 h-12 text-base font-medium border-2 border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl transition-all duration-300"
                   >
                     Cancel
                   </Button>
@@ -479,4 +512,3 @@ export default function CategoriesPage() {
       </div>
     </div>
   );
-}
