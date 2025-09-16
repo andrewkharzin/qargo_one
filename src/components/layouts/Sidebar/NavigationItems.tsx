@@ -53,6 +53,13 @@ export const navigationItems: NavigationItem[] = [
         icon: LayoutTemplate,
         description: "Grid view of note types",
         badge: "new"
+      },
+      {
+        title: "Templates",
+        url: "/dashboard/notes/templates",
+        icon: LayoutTemplate,
+        description: "List of  templates",
+        badge: "new"
       }
     ]
   },
