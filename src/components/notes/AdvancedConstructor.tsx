@@ -33,10 +33,13 @@ import {
   User,
   Hash,
   ToggleLeft,
-  FileText
+  FileText,
+  AlertTriangle
 } from "lucide-react";
 import { createTemplateNote } from "../../actions/notes/noteTemplates";
 import { useReactToPrint } from 'react-to-print';
+import { Badge } from "@/components/ui/badge";
+import { useRouter } from 'next/navigation';
 
 // Import our new modular components
 import { Template, TemplateField } from "../../types/notes/templates";
@@ -53,6 +56,7 @@ interface AdvancedConstructorProps {
 }
 
 export default function AdvancedConstructor({ onSave, onClose, initialTemplate = null }: AdvancedConstructorProps) {
+  const router = useRouter();
   const [template, setTemplate] = useState<Template>(createDefaultTemplate());
   const [selectedField, setSelectedField] = useState<TemplateField | null>(null);
   const [showFieldLibrary, setShowFieldLibrary] = useState(false);
@@ -277,21 +281,21 @@ export default function AdvancedConstructor({ onSave, onClose, initialTemplate =
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-white to-slate-50 dark:from-slate-950 dark:to-slate-900 text-slate-900 dark:text-slate-100 p-4 md:p-6">
-      <div className="max-w-7xl mx-auto">
+    <div className="w-full">
 
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6 md:mb-8"
+          className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8 gap-4"
         >
-          <div>
-            <h1 className="text-2xl md:text-4xl font-bold tracking-tight text-gray-900 dark:text-white mb-2 flex items-center gap-3">
-              <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center shadow-lg ring-1 ring-black/5">
+          <div className="relative">
+            <div className="absolute -inset-4 bg-gradient-to-r from-purple-500/10 to-pink-500/10 blur-2xl"></div>
+            <h1 className="text-3xl lg:text-4xl font-bold text-slate-800 dark:text-white mb-2 flex items-center gap-3 relative">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 shadow-lg">
                 <Wand2 className="w-6 h-6 text-white" />
               </div>
-              Template Constructor
+              <span>Template Constructor</span>
             </h1>
             <p className="text-slate-600 dark:text-slate-400 text-sm md:text-base">
               Build custom templates for your aviation operations
@@ -326,31 +330,132 @@ export default function AdvancedConstructor({ onSave, onClose, initialTemplate =
           transition={{ delay: 0.1 }}
           className="mb-8"
         >
-          <Card className="border-0 rounded-xl shadow-lg">
+          <Card className="border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm bg-white dark:bg-slate-900">
             <CardHeader>
-              <CardTitle className="text-lg font-bold text-gray-900 dark:text-white">
-                Quick Start Templates
-              </CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-base md:text-lg font-semibold text-gray-900 dark:text-white">
+                  Quick Start Templates
+                </CardTitle>
+                <div className="flex gap-2">
+                  <Select defaultValue="all">
+                    <SelectTrigger className="w-36 h-8 text-xs">
+                      <SelectValue placeholder="Category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Categories</SelectItem>
+                      <SelectItem value="flight_operations">Flight Operations</SelectItem>
+                      <SelectItem value="ground_operations">Ground Operations</SelectItem>
+                      <SelectItem value="safety_security">Safety & Security</SelectItem>
+                      <SelectItem value="maintenance">Maintenance</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Select defaultValue="popular">
+                    <SelectTrigger className="w-28 h-8 text-xs">
+                      <SelectValue placeholder="Sort" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="popular">Popular</SelectItem>
+                      <SelectItem value="recent">Recent</SelectItem>
+                      <SelectItem value="name">Name</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {Object.entries(predefinedTemplates).map(([key, tmpl]) => (
-                  <Button
-                    key={key}
-                    variant="outline"
-                    className="h-auto p-4 rounded-xl bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 border-slate-200 dark:border-slate-600 justify-start"
-                    onClick={() => loadPredefinedTemplate(key)}
-                  >
-                    <div className="text-left">
-                      <div className="font-semibold text-gray-900 dark:text-white text-sm">
-                        {tmpl.name}
-                      </div>
-                      <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                        {tmpl.description}
-                      </div>
-                    </div>
-                  </Button>
-                ))}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {Object.entries(predefinedTemplates).map(([key, tmpl]) => {
+                  const getIcon = (noteType: string) => {
+                    switch (noteType) {
+                      case 'checklist': return CheckSquare;
+                      case 'incident': return AlertTriangle;
+                      case 'maintenance': return Settings;
+                      case 'weather': return Calendar;
+                      case 'manifest': return User;
+                      case 'inspection': return Eye;
+                      case 'fuel': return Hash;
+                      case 'emergency': return AlertTriangle;
+                      case 'flight_plan': return FileText;
+                      default: return FileText;
+                    }
+                  };
+                  const Icon = getIcon(tmpl.noteType);
+                  
+                  return (
+                    <Card 
+                      key={key}
+                      className="group h-full border border-slate-200 dark:border-slate-700 rounded-xl hover:border-blue-300 dark:hover:border-blue-600 transition-all duration-200 hover:shadow-lg bg-white dark:bg-slate-900/60 overflow-hidden"
+                    >
+                      <CardContent className="p-0 h-full flex flex-col">
+                        {/* Header */}
+                        <div className="p-4 pb-3">
+                          <div className="flex items-start gap-3">
+                            <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-sm">
+                              <Icon className="w-5 h-5 text-white" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <h3 className="font-semibold text-sm text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors leading-tight">
+                                {tmpl.name}
+                              </h3>
+                              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 line-clamp-2 leading-relaxed">
+                                {tmpl.description}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Content */}
+                        <div className="px-4 pb-3 flex-1">
+                          <div className="flex items-center justify-between mb-2">
+                            <Badge variant="outline" className="text-xs px-2 py-1 bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800">
+                              {tmpl.noteType.replace('_', ' ')}
+                            </Badge>
+                            <span className="text-xs text-slate-400 dark:text-slate-500 font-medium">v1.0</span>
+                          </div>
+                          
+                          <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+                            <div className="flex items-center gap-1">
+                              <User className="w-3 h-3" />
+                              <span>Admin</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <FileText className="w-3 h-3" />
+                              <span>{tmpl.fields.length} fields</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Footer */}
+                        <div className="px-4 pb-4 pt-0 border-t border-slate-100 dark:border-slate-800">
+                          <div className="flex gap-2">
+                            <Button 
+                              size="sm" 
+                              variant="outline" 
+                              className="flex-1 h-8 text-xs hover:bg-blue-50 dark:hover:bg-blue-950 hover:border-blue-300 dark:hover:border-blue-600"
+                              onClick={(e) => { 
+                                e.stopPropagation(); 
+                                router.push(`/dashboard/notes/create?template=${key}`); 
+                              }}
+                            >
+                              Use Template
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant="ghost" 
+                              className="h-8 px-3 text-xs hover:bg-slate-50 dark:hover:bg-slate-800"
+                              onClick={(e) => { 
+                                e.stopPropagation(); 
+                                loadPredefinedTemplate(key); 
+                              }}
+                            >
+                              Preview
+                            </Button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
               </div>
             </CardContent>
           </Card>
@@ -710,7 +815,7 @@ export default function AdvancedConstructor({ onSave, onClose, initialTemplate =
                         <Eye className="w-5 h-5 mr-2 text-green-600 dark:text-green-400" />
                         Live Preview
                       </h4>
-                      <div className="prose prose-blue max-w-none">
+                      <div className="prose prose-blue max-w-none dark:prose-invert">
                         <pre className="whitespace-pre-wrap text-sm bg-gray-50 dark:bg-slate-950 p-4 rounded border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-200">
                           {generatePreviewContent(template, previewValues)}
                         </pre>
@@ -742,7 +847,6 @@ export default function AdvancedConstructor({ onSave, onClose, initialTemplate =
             </Tabs>
           </DialogContent>
         </Dialog>
-      </div>
     </div>
   );
 }
