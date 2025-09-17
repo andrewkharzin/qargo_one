@@ -1,4 +1,4 @@
-import AdvancedConstructor from '@/components/notes/template-constructor';
+import AdvancedConstructor from '@/components/notes/AdvancedConstructor';
 
 export default function TemplateConstructorPage() {
   return (
